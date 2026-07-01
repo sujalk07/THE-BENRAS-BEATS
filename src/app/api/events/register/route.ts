@@ -1,3 +1,4 @@
+// app/api/events/register/route.ts
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { registerUserForEvent } from "@/lib/event-registration";
@@ -17,10 +18,7 @@ export async function POST(request: Request) {
     const { eventId, userId } = await request.json();
 
     if (!eventId || !userId) {
-      return NextResponse.json(
-        { error: "Missing eventId or userId" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing eventId or userId" }, { status: 400 });
     }
 
     // Check Membership
@@ -31,21 +29,13 @@ export async function POST(request: Request) {
       .single();
 
     if (profileError || !profile) {
-      return NextResponse.json(
-        { error: "User profile not found." },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User profile not found." }, { status: 404 });
     }
 
     if (profile.membership_status !== "active") {
       return NextResponse.json(
-        {
-          error:
-            "Access Denied. You must have an active membership to register for events.",
-        },
-        {
-          status: 403,
-        }
+        { error: "Access Denied. You must have an active membership to register for events." },
+        { status: 403 }
       );
     }
 
@@ -57,34 +47,19 @@ export async function POST(request: Request) {
       .single();
 
     if (eventError || !event) {
-      return NextResponse.json(
-        { error: "Event not found." },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Event not found." }, { status: 404 });
     }
 
     // Check Capacity
     const { count, error: countError } = await supabaseAdmin
       .from("event_registrations")
-      .select("*", {
-        count: "exact",
-        head: true,
-      })
+      .select("*", { count: "exact", head: true })
       .eq("event_id", eventId);
 
-    if (countError) {
-      throw countError;
-    }
+    if (countError) throw countError;
 
     if ((count ?? 0) >= event.capacity) {
-      return NextResponse.json(
-        {
-          error: "This event is completely full!",
-        },
-        {
-          status: 400,
-        }
-      );
+      return NextResponse.json({ error: "This event is completely full!" }, { status: 400 });
     }
 
     // Check Already Registered
@@ -96,67 +71,25 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (existingRegistration) {
-      return NextResponse.json(
-        {
-          error: "You are already registered for this event!",
-        },
-        {
-          status: 400,
-        }
-      );
+      return NextResponse.json({ error: "You are already registered for this event!" }, { status: 400 });
     }
 
-    // Create Ticket
-    const { error: ticketError } = await supabaseAdmin
-      .from("tickets")
-      .insert({
-        user_id: userId,
-        event_id: eventId,
-        order_id: null,
-        payment_id: null,
-        amount_paid: 0,
-        claimed_by_member: true,
-      });
-
-    if (ticketError) {
-      throw ticketError;
-    }
-
-    // Register User
-    const { error: registerError } = await supabaseAdmin
-      .from("event_registrations")
-      .insert({
-        event_id: eventId,
-        user_id: userId,
-      });
-
-    if (registerError) {
-      throw registerError;
-    }
-
+    // Create ticket + registration via the RPC (single source of truth — no manual inserts here)
     await registerUserForEvent({
-  eventId,
-  userId,
-  orderId: null,
-  paymentId: null,
-  amountPaid: 0,
-  claimedByMember: true,
-});
+      eventId,
+      userId,
+      orderId: null,
+      paymentId: null,
+      amountPaid: 0,
+      claimedByMember: true,
+    });
 
-return NextResponse.json({
-  success: true,
-  message: "Successfully registered for the event!",
-});
+    return NextResponse.json({
+      success: true,
+      message: "Successfully registered for the event!",
+    });
   } catch (error: any) {
     console.error(error);
-
-    return NextResponse.json(
-      {
-        error: error.message,
-      },
-      {
-        status: 500,
-      }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
