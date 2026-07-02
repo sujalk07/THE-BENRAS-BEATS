@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { registerUserForEvent } from "@/lib/event-registration";
+import { sendTicketConfirmationEmail } from "@/lib/email";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -23,10 +24,10 @@ export async function POST(request: Request) {
 
     // Check Membership
     const { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("membership_status")
-      .eq("id", userId)
-      .single();
+  .from("profiles")
+  .select("membership_status, full_name")
+  .eq("id", userId)
+  .single();
 
     if (profileError || !profile) {
       return NextResponse.json({ error: "User profile not found." }, { status: 404 });
@@ -83,6 +84,37 @@ export async function POST(request: Request) {
       amountPaid: 0,
       claimedByMember: true,
     });
+
+    // Fetch the ticket we just created + event details + user's email, then send confirmation
+    const { data: newTicket } = await supabaseAdmin
+      .from("tickets")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("event_id", eventId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const { data: eventDetails } = await supabaseAdmin
+      .from("events")
+      .select("title, event_date, venue")
+      .eq("id", eventId)
+      .maybeSingle();
+
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+
+    if (newTicket && eventDetails && authUser?.user?.email) {
+      await sendTicketConfirmationEmail({
+        to: authUser.user.email,
+        holderName: profile.full_name ?? "Guest",
+        eventTitle: eventDetails.title,
+        eventDate: eventDetails.event_date,
+        venue: eventDetails.venue,
+        isMember: true,
+        amountPaid: 0,
+        ticketId: newTicket.id,
+      });
+    }
 
     return NextResponse.json({
       success: true,

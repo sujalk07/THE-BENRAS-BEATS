@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { registerUserForEvent } from "@/lib/event-registration";
+import { sendTicketConfirmationEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
@@ -74,13 +75,42 @@ export async function POST(request: Request) {
     }
 
     await registerUserForEvent({
-  eventId,
-  userId,
-  orderId: order.id,
-  paymentId: razorpay_payment_id,
-  amountPaid: order.amount,
-  claimedByMember: false,
-});
+      eventId,
+      userId,
+      orderId: order.id,
+      paymentId: razorpay_payment_id,
+      amountPaid: order.amount,
+      claimedByMember: false,
+    });
+
+    // Fetch the ticket we just created + event details + user info, then send confirmation
+    const { data: newTicket } = await supabaseAdmin
+      .from("tickets")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("event_id", eventId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const [{ data: eventDetails }, { data: profile }, { data: authUser }] = await Promise.all([
+      supabaseAdmin.from("events").select("title, event_date, venue").eq("id", eventId).maybeSingle(),
+      supabaseAdmin.from("profiles").select("full_name").eq("id", userId).maybeSingle(),
+      supabaseAdmin.auth.admin.getUserById(userId),
+    ]);
+
+    if (newTicket && eventDetails && authUser?.user?.email) {
+      await sendTicketConfirmationEmail({
+        to: authUser.user.email,
+        holderName: profile?.full_name ?? "Guest",
+        eventTitle: eventDetails.title,
+        eventDate: eventDetails.event_date,
+        venue: eventDetails.venue,
+        isMember: false,
+        amountPaid: order.amount,
+        ticketId: newTicket.id,
+      });
+    }
 
     return NextResponse.json({
       success: true,
