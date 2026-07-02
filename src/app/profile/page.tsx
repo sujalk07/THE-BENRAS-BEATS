@@ -6,27 +6,17 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import {
   UserCircle,
   Mail,
-  CreditCard,
-  CalendarDays,
-  Clock,
-  Ticket,
-  Loader2,
   ArrowLeft,
+  Crown,
+  Music,
 } from "lucide-react";
 
 interface MembershipInfo {
   membership_status: "active" | "inactive";
+  membership_id: string | null;
   plan: "intro" | "regular" | null;
   start_date: string | null;
   expiry_date: string | null;
-}
-
-interface EventTicket {
-  id: string;
-  event_title: string;
-  event_date: string;
-  venue: string;
-  status: "confirmed" | "cancelled" | string;
 }
 
 export default function ProfilePage() {
@@ -35,11 +25,11 @@ export default function ProfilePage() {
 
   const [membership, setMembership] = useState<MembershipInfo>({
     membership_status: "inactive",
+    membership_id: null,
     plan: null,
     start_date: null,
     expiry_date: null,
   });
-  const [tickets, setTickets] = useState<EventTicket[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
@@ -52,24 +42,16 @@ export default function ProfilePage() {
       if (!user) return;
 
       try {
-        const [membershipRes, ticketsRes] = await Promise.all([
-          fetch(`/api/membership-status?userId=${user.id}`),
-          fetch(`/api/events/my-tickets?userId=${user.id}`),
-        ]);
-
-        if (membershipRes.ok) {
-          const membershipData = await membershipRes.json();
+        const res = await fetch(`/api/membership-status?userId=${user.id}`);
+        if (res.ok) {
+          const data = await res.json();
           setMembership({
-            membership_status: membershipData.membership_status ?? "inactive",
-            plan: membershipData.plan ?? null,
-            start_date: membershipData.start_date ?? null,
-            expiry_date: membershipData.expiry_date ?? null,
+            membership_status: data.membership_status ?? "inactive",
+            membership_id: data.membership_id ?? null,
+            plan: data.plan ?? null,
+            start_date: data.start_date ?? null,
+            expiry_date: data.expiry_date ?? null,
           });
-        }
-
-        if (ticketsRes.ok) {
-          const ticketsData = await ticketsRes.json();
-          setTickets(ticketsData.tickets ?? []);
         }
       } catch (err) {
         console.error("Error fetching profile data:", err);
@@ -94,8 +76,10 @@ export default function ProfilePage() {
     return new Date(dateStr).toLocaleDateString("en-IN", { dateStyle: "medium" });
   };
 
+  const isActive = membership.membership_status === "active";
+
   const planLabel =
-    membership.membership_status !== "active"
+    !isActive
       ? "No Active Plan"
       : membership.plan === "intro"
       ? "Introductory Membership"
@@ -104,6 +88,9 @@ export default function ProfilePage() {
       : membership.plan
       ? membership.plan
       : "No Active Plan";
+
+  const fullName =
+    user.user_metadata?.full_name || user.user_metadata?.name || "Member";
 
   return (
     <main className="min-h-screen bg-[#0B0C10] px-6 py-10 text-white">
@@ -138,9 +125,7 @@ export default function ProfilePage() {
                 <UserCircle size={18} className="text-amber-400" />
                 <span className="text-sm uppercase tracking-wider">Full Name</span>
               </div>
-              <p className="mt-2 text-white">
-                {user.user_metadata?.full_name || user.user_metadata?.name || "Not set"}
-              </p>
+              <p className="mt-2 text-white">{fullName}</p>
             </div>
 
             {/* Email */}
@@ -152,90 +137,108 @@ export default function ProfilePage() {
               <p className="mt-2 text-white">{user.email}</p>
             </div>
 
-            {/* Membership Plan */}
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="flex items-center gap-3 text-gray-400">
-                <CreditCard size={18} className="text-amber-400" />
-                <span className="text-sm uppercase tracking-wider">Membership Plan</span>
+            {/* Membership Digital Card */}
+            <div>
+              <div className="flex items-center gap-3 text-gray-400 mb-3">
+                <Crown size={18} className="text-amber-400" />
+                <span className="text-sm uppercase tracking-wider">Membership Card</span>
               </div>
+
               {dataLoading ? (
-                <div className="mt-2 h-5 w-32 animate-pulse rounded bg-white/5" />
-              ) : (
-                <p
-                  className={`mt-2 font-semibold ${
-                    membership.membership_status === "active" ? "text-green-400" : "text-red-400"
-                  }`}
+                <div className="h-48 w-full animate-pulse rounded-2xl bg-white/5" />
+              ) : isActive ? (
+                <div
+                  className="relative overflow-hidden rounded-2xl p-6"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #fceabb 0%, #f8b500 25%, #b8860b 50%, #fceabb 75%, #d4af37 100%)",
+                  }}
                 >
-                  {planLabel}
-                </p>
-              )}
-            </div>
+                  {/* Decorative shine circles */}
+                  <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/20 blur-2xl" />
+                  <div className="pointer-events-none absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
 
-            {/* Membership Start Date */}
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="flex items-center gap-3 text-gray-400">
-                <CalendarDays size={18} className="text-amber-400" />
-                <span className="text-sm uppercase tracking-wider">Membership Start Date</span>
-              </div>
-              {dataLoading ? (
-                <div className="mt-2 h-5 w-32 animate-pulse rounded bg-white/5" />
-              ) : (
-                <p className="mt-2 text-white">{formatDate(membership.start_date)}</p>
-              )}
-            </div>
-
-            {/* Membership Expiry Date */}
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="flex items-center gap-3 text-gray-400">
-                <Clock size={18} className="text-amber-400" />
-                <span className="text-sm uppercase tracking-wider">Membership Expiry Date</span>
-              </div>
-              {dataLoading ? (
-                <div className="mt-2 h-5 w-32 animate-pulse rounded bg-white/5" />
-              ) : (
-                <p className="mt-2 text-white">{formatDate(membership.expiry_date)}</p>
-              )}
-            </div>
-
-            {/* My Event Tickets */}
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="flex items-center gap-3 text-gray-400">
-                <Ticket size={18} className="text-amber-400" />
-                <span className="text-sm uppercase tracking-wider">My Event Tickets</span>
-              </div>
-
-              {dataLoading ? (
-                <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
-                  <Loader2 size={14} className="animate-spin" /> Loading tickets...
-                </div>
-              ) : tickets.length === 0 ? (
-                <p className="mt-3 text-sm text-gray-500">
-                  You haven't booked any event tickets yet.
-                </p>
-              ) : (
-                <div className="mt-3 space-y-3">
-                  {tickets.map((ticket) => (
-                    <div
-                      key={ticket.id}
-                      className="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 p-3"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-white">{ticket.event_title}</p>
-                        <p className="text-xs text-gray-400">
-                          {formatDate(ticket.event_date)} · {ticket.venue}
-                        </p>
-                      </div>
+                  <div className="relative flex items-start justify-between">
+                    <div className="flex items-center gap-2">
+                      <Music size={20} style={{ color: "#3b2a06" }} />
                       <span
-                        className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                          ticket.status === "confirmed"
-                            ? "bg-emerald-500/10 text-emerald-400"
-                            : "bg-red-500/10 text-red-400"
-                        }`}
+                        className="text-sm font-extrabold tracking-widest"
+                        style={{ color: "#3b2a06" }}
                       >
-                        {ticket.status}
+                        THE BENARAS BEATS
                       </span>
                     </div>
-                  ))}
+                    <Crown size={22} style={{ color: "#3b2a06" }} />
+                  </div>
+
+                  <p
+                    className="relative mt-1 text-[10px] font-semibold uppercase tracking-[0.2em]"
+                    style={{ color: "#5c4308" }}
+                  >
+                    {planLabel}
+                  </p>
+
+                  <div className="relative mt-8">
+                    <p
+                      className="text-[10px] font-semibold uppercase tracking-wider"
+                      style={{ color: "#5c4308" }}
+                    >
+                      Member Name
+                    </p>
+                    <p
+                      className="mt-0.5 text-xl font-extrabold tracking-wide"
+                      style={{ color: "#2b1e03" }}
+                    >
+                      {fullName}
+                    </p>
+                  </div>
+
+                  <div className="relative mt-5 flex items-end justify-between">
+                    <div>
+                      <p
+                        className="text-[10px] font-semibold uppercase tracking-wider"
+                        style={{ color: "#5c4308" }}
+                      >
+                        Membership ID
+                      </p>
+                      <p
+                        className="mt-0.5 font-mono text-sm font-bold tracking-widest"
+                        style={{ color: "#2b1e03" }}
+                      >
+                        {membership.membership_id
+                          ? membership.membership_id.slice(0, 8).toUpperCase()
+                          : "—"}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <p
+                        className="text-[10px] font-semibold uppercase tracking-wider"
+                        style={{ color: "#5c4308" }}
+                      >
+                        Valid Until
+                      </p>
+                      <p
+                        className="mt-0.5 text-sm font-bold"
+                        style={{ color: "#2b1e03" }}
+                      >
+                        {formatDate(membership.expiry_date)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-6 text-center">
+                  <Crown size={28} className="mx-auto text-gray-600" />
+                  <p className="mt-3 text-sm text-gray-400">
+                    You don't have an active membership yet.
+                  </p>
+                  <button
+                    onClick={() => router.push("/membership")}
+                    className="mt-4 rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-black hover:bg-amber-400 transition"
+                  >
+                    Become a Member
+                  </button>
                 </div>
               )}
             </div>

@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     // Get the most recent membership row for this user
     const { data, error } = await supabaseAdmin
       .from("memberships")
-      .select("plan_name, status, starts_at, expires_at")
+      .select("id, plan_name, status, starts_at, expires_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
     if (!data) {
       return NextResponse.json({
         membership_status: "inactive",
+        membership_id: null,
         plan: null,
         start_date: null,
         expiry_date: null,
@@ -47,6 +48,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       membership_status: effectiveStatus,
+      membership_id: data.id,
       plan: data.plan_name, // e.g. "intro" or "regular"
       start_date: data.starts_at,
       expiry_date: data.expires_at,
