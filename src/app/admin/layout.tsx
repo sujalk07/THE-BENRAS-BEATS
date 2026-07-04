@@ -6,13 +6,14 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { isAdminEmail } from "@/lib/admin";
-import { LayoutDashboard, CalendarDays, Users, CreditCard, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, CreditCard, ArrowLeft, Mic2 } from "lucide-react";
 
 const adminLinks = [
   { name: "Overview", href: "/admin", icon: LayoutDashboard },
   { name: "Events", href: "/admin/events", icon: CalendarDays },
   { name: "Registrations", href: "/admin/registrations", icon: Users },
   { name: "Memberships", href: "/admin/memberships", icon: CreditCard },
+  { name: "Performers", href: "/admin/performers", icon: Mic2 },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

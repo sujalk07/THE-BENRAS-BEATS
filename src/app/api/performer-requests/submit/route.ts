@@ -10,13 +10,13 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 
 export async function POST(request: Request) {
   try {
-    const { userId, artistName, genre, bio, socialLink, sampleTrackUrl } = await request.json();
+    const { userId, artistName, genre, bio, socialLink, sampleTrackUrl, contactNumber, email } =
+      await request.json();
 
-    if (!userId || !artistName || !genre) {
+    if (!userId || !artistName || !genre || !contactNumber || !email) {
       return NextResponse.json({ error: "Required fields are missing." }, { status: 400 });
     }
 
-    // Insert new application record
     const { data, error } = await supabaseAdmin
       .from("performer_requests")
       .insert({
@@ -26,15 +26,17 @@ export async function POST(request: Request) {
         bio,
         social_link: socialLink,
         sample_track_url: sampleTrackUrl,
+        contact_number: contactNumber,
+        email,
       })
       .select()
       .single();
 
     if (error) throw error;
 
-    return NextResponse.json({ 
-      success: true, 
-      message: "Your performer application has been received successfully!" 
+    return NextResponse.json({
+      success: true,
+      message: "Your performer application has been received successfully!",
     });
   } catch (error: any) {
     console.error("Submission failed:", error);

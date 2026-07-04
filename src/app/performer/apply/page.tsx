@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useRouter } from "next/navigation";
-import { Music, Radio, Link as LinkIcon, Disc, AlignLeft, User } from "lucide-react";
+import { Music, Radio, Link as LinkIcon, Disc, AlignLeft, User, Phone, Mail } from "lucide-react";
 
 export default function PerformerApplyPage() {
   const { user } = useAuth();
@@ -16,6 +16,8 @@ export default function PerformerApplyPage() {
     bio: "",
     socialLink: "",
     sampleTrackUrl: "",
+    contactNumber: "",
+    email: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -57,6 +59,8 @@ export default function PerformerApplyPage() {
         bio: "",
         socialLink: "",
         sampleTrackUrl: "",
+        contactNumber: "",
+        email: "",
       });
       router.push("/");
     } catch (err: any) {
@@ -115,6 +119,44 @@ export default function PerformerApplyPage() {
                   value={formData.genre}
                   onChange={handleChange}
                   placeholder="e.g., Classical Fusion, Electronic, Hip-Hop"
+                  className="w-full bg-[#0B0C10]/60 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-all font-medium"
+                />
+              </div>
+            </div>
+
+            {/* Contact Number */}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+                Contact Number
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-4 top-3.5 text-gray-500" size={16} />
+                <input
+                  type="tel"
+                  name="contactNumber"
+                  required
+                  value={formData.contactNumber}
+                  onChange={handleChange}
+                  placeholder="e.g., +91 98765 43210"
+                  className="w-full bg-[#0B0C10]/60 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-all font-medium"
+                />
+              </div>
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-3.5 text-gray-500" size={16} />
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="you@example.com"
                   className="w-full bg-[#0B0C10]/60 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-all font-medium"
                 />
               </div>
