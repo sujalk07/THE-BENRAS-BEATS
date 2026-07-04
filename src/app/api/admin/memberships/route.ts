@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { verifyAdmin } from "@/lib/admin-api";
+import { getAllAuthUsers } from "@/lib/get-all-auth-users";
 
 export async function GET(req: NextRequest) {
   try {
@@ -27,16 +28,18 @@ export async function GET(req: NextRequest) {
     }
 
     const userIds = [...new Set(memberships.map((m) => m.user_id))];
-    const { data: profiles } = await supabaseAdmin
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", userIds);
+    const [{ data: profiles }, allAuthUsers] = await Promise.all([
+      supabaseAdmin.from("profiles").select("id, full_name").in("id", userIds),
+      getAllAuthUsers(),
+    ]);
 
     const profilesMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+    const emailMap = new Map(allAuthUsers.map((u) => [u.id, u.email]));
 
     const result = memberships.map((m) => ({
       id: m.id,
       holder_name: profilesMap.get(m.user_id)?.full_name ?? "Unknown",
+      holder_email: emailMap.get(m.user_id) ?? "—",
       plan_name: m.plan_name,
       status: m.status,
       starts_at: m.starts_at,

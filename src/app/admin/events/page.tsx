@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Lock, Unlock } from "lucide-react";
 
 interface AdminEvent {
   id: string;
@@ -13,6 +13,7 @@ interface AdminEvent {
   venue: string;
   capacity: number;
   ticket_price: number;
+  registration_open: boolean;
 }
 
 export default function AdminEventsPage() {
@@ -20,6 +21,7 @@ export default function AdminEventsPage() {
   const [events, setEvents] = useState<AdminEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const fetchEvents = async () => {
     if (!user) return;
@@ -61,6 +63,36 @@ export default function AdminEventsPage() {
     }
   };
 
+  const handleToggleRegistration = async (event: AdminEvent) => {
+    if (!user) return;
+    const newValue = !event.registration_open;
+
+    setTogglingId(event.id);
+    try {
+      const res = await fetch(`/api/admin/events/${event.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          title: event.title,
+          registration_open: newValue,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to update event");
+        return;
+      }
+      setEvents((prev) =>
+        prev.map((e) => (e.id === event.id ? { ...e, registration_open: newValue } : e))
+      );
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between">
@@ -89,6 +121,7 @@ export default function AdminEventsPage() {
                 <th className="p-3 font-medium">Venue</th>
                 <th className="p-3 font-medium">Capacity</th>
                 <th className="p-3 font-medium">Price</th>
+                <th className="p-3 font-medium">Bookings</th>
                 <th className="p-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
@@ -102,6 +135,26 @@ export default function AdminEventsPage() {
                   <td className="p-3 text-gray-400">{event.venue}</td>
                   <td className="p-3 text-gray-400">{event.capacity}</td>
                   <td className="p-3 text-gray-400">₹{event.ticket_price}</td>
+                  <td className="p-3">
+                    <button
+                      onClick={() => handleToggleRegistration(event)}
+                      disabled={togglingId === event.id}
+                      className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase transition disabled:opacity-50 ${
+                        event.registration_open
+                          ? "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                          : "bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                      }`}
+                    >
+                      {togglingId === event.id ? (
+                        <Loader2 size={11} className="animate-spin" />
+                      ) : event.registration_open ? (
+                        <Unlock size={11} />
+                      ) : (
+                        <Lock size={11} />
+                      )}
+                      {event.registration_open ? "Open" : "Closed"}
+                    </button>
+                  </td>
                   <td className="p-3">
                     <div className="flex items-center justify-end gap-2">
                       <Link

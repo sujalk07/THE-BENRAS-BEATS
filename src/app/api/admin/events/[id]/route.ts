@@ -16,19 +16,26 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { title, description, event_date, venue, image_url, capacity, ticket_price } = eventData;
+    const { title, description, event_date, venue, image_url, capacity, ticket_price, registration_open } = eventData;
+
+    const updatePayload: Record<string, any> = {
+      title,
+      description,
+      event_date,
+      venue,
+      image_url,
+      capacity,
+      ticket_price,
+    };
+
+    // Only include registration_open if explicitly provided (so partial updates don't accidentally reset it)
+    if (typeof registration_open === "boolean") {
+      updatePayload.registration_open = registration_open;
+    }
 
     const { data, error } = await supabaseAdmin
       .from("events")
-      .update({
-        title,
-        description,
-        event_date,
-        venue,
-        image_url,
-        capacity,
-        ticket_price,
-      })
+      .update(updatePayload)
       .eq("id", id)
       .select()
       .single();
@@ -56,6 +63,25 @@ export async function DELETE(
 
     if (!(await verifyAdmin(userId))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const { count, error: countError } = await supabaseAdmin
+      .from("event_registrations")
+      .select("*", { count: "exact", head: true })
+      .eq("event_id", id);
+
+    if (countError) {
+      console.error("Registration count check error:", countError);
+      return NextResponse.json({ error: "Failed to check registrations" }, { status: 500 });
+    }
+
+    if ((count ?? 0) > 0) {
+      return NextResponse.json(
+        {
+          error: `This event has ${count} existing registration(s) and can't be deleted. Close bookings instead if you want to stop new signups.`,
+        },
+        { status: 409 }
+      );
     }
 
     const { error } = await supabaseAdmin.from("events").delete().eq("id", id);

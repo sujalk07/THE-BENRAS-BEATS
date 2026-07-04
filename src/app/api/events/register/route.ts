@@ -43,12 +43,19 @@ export async function POST(request: Request) {
     // Check Event
     const { data: event, error: eventError } = await supabaseAdmin
       .from("events")
-      .select("capacity")
+      .select("capacity, title, event_date, venue, registration_open")
       .eq("id", eventId)
       .single();
 
     if (eventError || !event) {
       return NextResponse.json({ error: "Event not found." }, { status: 404 });
+    }
+
+    if (!event.registration_open) {
+      return NextResponse.json(
+        { error: "Registration for this event is currently closed." },
+        { status: 403 }
+      );
     }
 
     // Check Capacity

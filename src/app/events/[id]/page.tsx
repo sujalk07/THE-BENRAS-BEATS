@@ -29,6 +29,7 @@ interface EventDetails {
   isSoldOut: boolean;
   isUserRegistered: boolean;
   isMember: boolean;
+  registration_open: boolean;
   artists?: Artist[];
 }
 
@@ -39,8 +40,6 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
   
   const [event, setEvent] = useState<EventDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
-
 
   const fetchEventDetails = async () => {
     try {
@@ -146,9 +145,9 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
     }
 
     if (!(window as any).Razorpay) {
-  alert("Payment gateway is still loading. Please wait a moment and try again.");
-  return;
-}
+      alert("Payment gateway is still loading. Please wait a moment and try again.");
+      return;
+    }
 
     const options = {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -216,16 +215,14 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
   if (!event) return <div className="text-center text-red-400 mt-20 font-medium">Showcase timeline could not be parsed.</div>;
 
   const buttonDisabled =
-  event.isUserRegistered || event.isSoldOut;
+  event.isUserRegistered || event.isSoldOut || !event.registration_open;
 
   return (
     <>
     <Script
-  src="https://checkout.razorpay.com/v1/checkout.js"
-  strategy="afterInteractive"
-  onLoad={() => setRazorpayLoaded(true)}
-  onError={() => console.error("Razorpay SDK failed to load")}
-/>
+      src="https://checkout.razorpay.com/v1/checkout.js"
+      strategy="beforeInteractive"
+    />
     <div className="max-w-4xl mx-auto px-4 py-12 selection:bg-amber-500 selection:text-black">
       {/* Back navigation */}
       <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-amber-500 transition-colors mb-6 text-sm font-medium">
@@ -323,7 +320,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
               className={`px-8 py-3.5 rounded-xl font-bold flex items-center gap-2 transition-all text-sm tracking-wide ${
                 event.isUserRegistered
                   ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-not-allowed"
-                  : event.isSoldOut
+                  : event.isSoldOut || !event.registration_open
                   ? "bg-gray-900 text-gray-600 border border-white/5 cursor-not-allowed"
                   : "bg-amber-500 text-black hover:bg-amber-400 shadow-xl shadow-amber-500/10 active:scale-[0.99]"
               }`}
@@ -334,6 +331,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
   </>
 ) : event.isSoldOut ? (
   "Sold Out"
+) : !event.registration_open ? (
+  "Registration Closed"
 ) : event.isMember ? (
   "Claim Free Ticket"
 ) : (

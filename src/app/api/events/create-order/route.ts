@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     // ==========================
     const { data: event, error: eventError } = await supabaseAdmin
       .from("events")
-      .select("ticket_price,title")
+      .select("ticket_price,title,registration_open")
       .eq("id", eventId)
       .single();
 
@@ -48,6 +48,16 @@ export async function POST(request: Request) {
         {
           status: 404,
         }
+      );
+    }
+
+    // ==========================
+    // Check Registration Open
+    // ==========================
+    if (!event.registration_open) {
+      return NextResponse.json(
+        { error: "Registration for this event is currently closed." },
+        { status: 403 }
       );
     }
 

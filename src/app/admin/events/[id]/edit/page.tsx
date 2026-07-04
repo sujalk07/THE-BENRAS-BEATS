@@ -1,4 +1,3 @@
-// app/admin/events/[id]/edit/page.tsx
 "use client";
 
 import { useEffect, useState, use } from "react";
@@ -12,6 +11,8 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [imageMode, setImageMode] = useState<"url" | "upload">("url");
+  const [uploading, setUploading] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
@@ -52,6 +53,35 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
 
   const handleChange = (field: string, value: string | number) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("userId", user.id);
+
+      const res = await fetch("/api/admin/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Upload failed");
+        return;
+      }
+
+      handleChange("image_url", data.url);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -138,13 +168,62 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase text-gray-400">Image URL</label>
-          <input
-            type="text"
-            value={form.image_url}
-            onChange={(e) => handleChange("image_url", e.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-white/[0.03] p-3 text-white focus:border-amber-500 focus:outline-none"
-          />
+          <label className="mb-1 block text-xs font-semibold uppercase text-gray-400">
+            Event Image
+          </label>
+
+          <div className="mb-2 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setImageMode("url")}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                imageMode === "url"
+                  ? "bg-amber-500 text-black"
+                  : "bg-white/5 text-gray-400 hover:text-white"
+              }`}
+            >
+              Paste URL
+            </button>
+            <button
+              type="button"
+              onClick={() => setImageMode("upload")}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                imageMode === "upload"
+                  ? "bg-amber-500 text-black"
+                  : "bg-white/5 text-gray-400 hover:text-white"
+              }`}
+            >
+              Upload Image
+            </button>
+          </div>
+
+          {imageMode === "url" ? (
+            <input
+              type="text"
+              value={form.image_url}
+              onChange={(e) => handleChange("image_url", e.target.value)}
+              placeholder="https://..."
+              className="w-full rounded-lg border border-white/10 bg-white/[0.03] p-3 text-white focus:border-amber-500 focus:outline-none"
+            />
+          ) : (
+            <div>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleFileUpload}
+                className="w-full rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm text-gray-300 file:mr-3 file:rounded-lg file:border-0 file:bg-amber-500 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-black hover:file:bg-amber-400"
+              />
+              {uploading && <p className="mt-2 text-xs text-amber-400">Uploading...</p>}
+            </div>
+          )}
+
+          {form.image_url && (
+            <img
+              src={form.image_url}
+              alt="Preview"
+              className="mt-3 h-32 w-full rounded-lg object-cover border border-white/10"
+            />
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">

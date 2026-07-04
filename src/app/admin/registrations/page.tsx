@@ -8,6 +8,7 @@ import { Loader2, Crown } from "lucide-react";
 interface Registration {
   id: string;
   holder_name: string;
+  holder_email: string;
   event_title: string;
   event_date: string | null;
   venue: string;
@@ -41,8 +42,14 @@ export default function AdminRegistrationsPage() {
   const filtered = registrations.filter(
     (r) =>
       r.holder_name.toLowerCase().includes(search.toLowerCase()) ||
+      r.holder_email.toLowerCase().includes(search.toLowerCase()) ||
       r.event_title.toLowerCase().includes(search.toLowerCase())
   );
+
+  const formatDateTime = (dateStr: string | null) =>
+    dateStr
+      ? new Date(dateStr).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
+      : "—";
 
   const formatDate = (dateStr: string | null) =>
     dateStr ? new Date(dateStr).toLocaleDateString("en-IN", { dateStyle: "medium" }) : "—";
@@ -54,7 +61,7 @@ export default function AdminRegistrationsPage() {
 
       <input
         type="text"
-        placeholder="Search by name or event..."
+        placeholder="Search by name, email, or event..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="mt-6 w-full max-w-sm rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder-gray-500 focus:border-amber-500 focus:outline-none"
@@ -72,18 +79,20 @@ export default function AdminRegistrationsPage() {
             <thead className="bg-white/[0.03] text-left text-gray-400">
               <tr>
                 <th className="p-3 font-medium">Attendee</th>
+                <th className="p-3 font-medium">Email</th>
                 <th className="p-3 font-medium">Event</th>
                 <th className="p-3 font-medium">Event Date</th>
                 <th className="p-3 font-medium">Venue</th>
                 <th className="p-3 font-medium">Type</th>
                 <th className="p-3 font-medium">Paid</th>
-                <th className="p-3 font-medium">Registered</th>
+                <th className="p-3 font-medium">Purchased At</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((r) => (
                 <tr key={r.id} className="border-t border-white/5">
                   <td className="p-3 font-medium">{r.holder_name}</td>
+                  <td className="p-3 text-gray-400">{r.holder_email}</td>
                   <td className="p-3 text-gray-300">{r.event_title}</td>
                   <td className="p-3 text-gray-400">{formatDate(r.event_date)}</td>
                   <td className="p-3 text-gray-400">{r.venue}</td>
@@ -100,7 +109,7 @@ export default function AdminRegistrationsPage() {
                   <td className="p-3 text-gray-400">
                     {r.amount_paid > 0 ? `₹${r.amount_paid}` : "Free"}
                   </td>
-                  <td className="p-3 text-gray-500">{formatDate(r.created_at)}</td>
+                  <td className="p-3 text-gray-500">{formatDateTime(r.created_at)}</td>
                 </tr>
               ))}
             </tbody>

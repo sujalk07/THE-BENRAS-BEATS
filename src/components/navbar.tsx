@@ -5,10 +5,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import logo from "../assets/logo.png";
-import { User, Menu, X, LogOut, LayoutDashboard, UserCircle } from "lucide-react";
+import { User, Menu, X, LogOut, LayoutDashboard, UserCircle, ShieldCheck } from "lucide-react";
 import { Cormorant_Garamond } from "next/font/google";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { supabase } from "@/lib/supabase";
+import { isAdminEmail } from "@/lib/admin";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -29,6 +30,8 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false); // mobile drawer
   const [userMenuOpen, setUserMenuOpen] = useState(false); // desktop user dropdown
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const isAdmin = isAdminEmail(user?.email);
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -83,7 +86,7 @@ export default function Navbar() {
               />
             </div>
             <div className="flex flex-col">
-              <h1 className={`${cormorant.className} text-xl font-bold leading-none text-white lg:text-2xl`}>
+              <h1 className={`${cormorant.className} text-2xl font-bold leading-none text-white lg:text-3xl`}>
                 The Benaras Beats
               </h1>
               <p className="mt-1 text-[10px] uppercase tracking-[0.25em] text-amber-400/80">
@@ -156,6 +159,17 @@ export default function Navbar() {
                         >
                           <LayoutDashboard size={16} /> Dashboard
                         </Link>
+
+                        {isAdmin && (
+                          <Link
+                            href="/admin"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-amber-400 transition hover:bg-amber-500/10"
+                          >
+                            <ShieldCheck size={16} /> Admin Panel
+                          </Link>
+                        )}
+
                         <button
                           onClick={handleLogout}
                           className="mt-1 flex items-center gap-3 rounded-lg border-t border-white/5 px-3 py-2 pt-3 text-sm font-medium text-red-400 transition hover:bg-red-500/10"
@@ -251,6 +265,16 @@ export default function Navbar() {
                 >
                   <UserCircle size={18} /> Profile
                 </Link>
+
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-3 text-sm font-medium text-amber-400 py-2"
+                  >
+                    <ShieldCheck size={18} /> Admin Panel
+                  </Link>
+                )}
+
                 <button
                   onClick={handleLogout}
                   className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-red-500/30 px-4 py-2 text-sm text-red-400 transition hover:bg-red-500 hover:text-white"

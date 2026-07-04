@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 interface Membership {
   id: string;
   holder_name: string;
+  holder_email: string;
   plan_name: string;
   status: string;
   starts_at: string | null;
@@ -38,12 +39,19 @@ export default function AdminMembershipsPage() {
     fetchMemberships();
   }, [user]);
 
-  const filtered = memberships.filter((m) =>
-    m.holder_name.toLowerCase().includes(search.toLowerCase())
+  const filtered = memberships.filter(
+    (m) =>
+      m.holder_name.toLowerCase().includes(search.toLowerCase()) ||
+      m.holder_email.toLowerCase().includes(search.toLowerCase())
   );
 
   const formatDate = (dateStr: string | null) =>
     dateStr ? new Date(dateStr).toLocaleDateString("en-IN", { dateStyle: "medium" }) : "—";
+
+  const formatDateTime = (dateStr: string | null) =>
+    dateStr
+      ? new Date(dateStr).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
+      : "—";
 
   const isExpired = (dateStr: string | null) =>
     dateStr ? new Date(dateStr) < new Date() : false;
@@ -55,7 +63,7 @@ export default function AdminMembershipsPage() {
 
       <input
         type="text"
-        placeholder="Search by name..."
+        placeholder="Search by name or email..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="mt-6 w-full max-w-sm rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder-gray-500 focus:border-amber-500 focus:outline-none"
@@ -73,11 +81,13 @@ export default function AdminMembershipsPage() {
             <thead className="bg-white/[0.03] text-left text-gray-400">
               <tr>
                 <th className="p-3 font-medium">Member</th>
+                <th className="p-3 font-medium">Email</th>
                 <th className="p-3 font-medium">Plan</th>
                 <th className="p-3 font-medium">Status</th>
                 <th className="p-3 font-medium">Start</th>
                 <th className="p-3 font-medium">Expiry</th>
                 <th className="p-3 font-medium">Amount</th>
+                <th className="p-3 font-medium">Purchased At</th>
               </tr>
             </thead>
             <tbody>
@@ -86,6 +96,7 @@ export default function AdminMembershipsPage() {
                 return (
                   <tr key={m.id} className="border-t border-white/5">
                     <td className="p-3 font-medium">{m.holder_name}</td>
+                    <td className="p-3 text-gray-400">{m.holder_email}</td>
                     <td className="p-3 text-gray-300 capitalize">{m.plan_name}</td>
                     <td className="p-3">
                       <span
@@ -101,6 +112,7 @@ export default function AdminMembershipsPage() {
                     <td className="p-3 text-gray-400">{formatDate(m.starts_at)}</td>
                     <td className="p-3 text-gray-400">{formatDate(m.expires_at)}</td>
                     <td className="p-3 text-gray-400">₹{m.amount}</td>
+                    <td className="p-3 text-gray-500">{formatDateTime(m.created_at)}</td>
                   </tr>
                 );
               })}

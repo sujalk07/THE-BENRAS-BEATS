@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { verifyAdmin } from "@/lib/admin-api";
+import { getAllAuthUsers } from "@/lib/get-all-auth-users";
 
 export async function GET(req: NextRequest) {
   try {
@@ -29,13 +30,15 @@ export async function GET(req: NextRequest) {
     const eventIds = [...new Set(tickets.map((t) => t.event_id))];
     const userIds = [...new Set(tickets.map((t) => t.user_id))];
 
-    const [{ data: events }, { data: profiles }] = await Promise.all([
+    const [{ data: events }, { data: profiles }, allAuthUsers] = await Promise.all([
       supabaseAdmin.from("events").select("id, title, event_date, venue").in("id", eventIds),
       supabaseAdmin.from("profiles").select("id, full_name").in("id", userIds),
+      getAllAuthUsers(),
     ]);
 
     const eventsMap = new Map((events ?? []).map((e) => [e.id, e]));
     const profilesMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+    const emailMap = new Map(allAuthUsers.map((u) => [u.id, u.email]));
 
     const registrations = tickets.map((t) => {
       const event = eventsMap.get(t.event_id);
@@ -43,6 +46,7 @@ export async function GET(req: NextRequest) {
       return {
         id: t.id,
         holder_name: profile?.full_name ?? "Unknown",
+        holder_email: emailMap.get(t.user_id) ?? "—",
         event_title: event?.title ?? "Unknown Event",
         event_date: event?.event_date ?? null,
         venue: event?.venue ?? "—",
@@ -57,4 +61,4 @@ export async function GET(req: NextRequest) {
     console.error(err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
-}
+}   

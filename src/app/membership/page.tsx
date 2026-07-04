@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import Script from "next/script";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { Check, Music, Sparkles, ArrowLeft, Loader2 } from "lucide-react";
+import { Check, Music, Sparkles, ArrowLeft, Loader2, X } from "lucide-react";
 import { Cormorant_Garamond } from "next/font/google";
 
 const cormorant = Cormorant_Garamond({
@@ -48,6 +48,15 @@ const tiers = [
   },
 ];
 
+const MEMBERSHIP_RULES = [
+  "Membership is valid for the stated duration only and is non-transferable.",
+  "Membership fees are non-refundable once payment is completed.",
+  "Access to member-only events is subject to availability and capacity limits.",
+  "The Benaras Beats reserves the right to modify membership benefits at any time.",
+  "Misuse of membership privileges may result in cancellation without refund.",
+  "Members must carry valid ID matching their registered account when attending events.",
+];
+
 export default function MembershipPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -57,6 +66,10 @@ export default function MembershipPage() {
   const [slotsLeft, setSlotsLeft] = useState(50);
   const [pageLoading, setPageLoading] = useState(true);
   const [subscribingPlan, setSubscribingPlan] = useState<"intro" | "regular" | null>(null);
+
+  const [showRulesModal, setShowRulesModal] = useState(false);
+  const [pendingPlan, setPendingPlan] = useState<"intro" | "regular" | null>(null);
+  const [agreedToRules, setAgreedToRules] = useState(false);
 
   useEffect(() => {
     fetch("/api/membership-status")
@@ -69,7 +82,8 @@ export default function MembershipPage() {
       .finally(() => setPageLoading(false));
   }, []);
 
-  const handleSubscribe = async (plan: "intro" | "regular") => {
+  // Step 1: user clicks "Become a Member" — open the rules modal instead of paying immediately
+  const handleSubscribeClick = (plan: "intro" | "regular") => {
     if (plan === "intro" && soldOut) {
       alert("This offer has expired!");
       return;
@@ -79,6 +93,21 @@ export default function MembershipPage() {
       router.push(`/login?redirect=/membership&plan=${plan}`);
       return;
     }
+
+    setPendingPlan(plan);
+    setAgreedToRules(false);
+    setShowRulesModal(true);
+  };
+
+  // Step 2: user confirms agreement in the modal — proceed with actual payment flow
+  const handleConfirmRules = () => {
+    if (!agreedToRules || !pendingPlan) return;
+    setShowRulesModal(false);
+    handleSubscribe(pendingPlan);
+  };
+
+  const handleSubscribe = async (plan: "intro" | "regular") => {
+    if (!user) return;
 
     setSubscribingPlan(plan);
 
@@ -144,15 +173,10 @@ export default function MembershipPage() {
         },
       };
 
-      console.log("razorpayLoaded =", razorpayLoaded);
-console.log("window.Razorpay =", (window as any).Razorpay);
-
       if (!(window as any).Razorpay) {
-  alert("Razorpay SDK not found.");
-  return;
-}
-
-console.log("Opening Razorpay...");
+        alert("Razorpay SDK not found.");
+        return;
+      }
 
       const rzp = new (window as any).Razorpay(options);
       rzp.open();
@@ -178,18 +202,16 @@ console.log("Opening Razorpay...");
   return (
     <>
       <Script
-  src="https://checkout.razorpay.com/v1/checkout.js"
-  strategy="afterInteractive"
-  onLoad={() => {
-    console.log("✅ Razorpay SDK Loaded");
-    // console.log((window as any).Razorpay);
-    setRazorpayLoaded(true);
-  }}
-  onError={() => {
-    console.log("❌ Razorpay SDK Failed");
-    
-  }}
-/>
+        src="https://checkout.razorpay.com/v1/checkout.js"
+        strategy="afterInteractive"
+        onLoad={() => {
+          console.log("✅ Razorpay SDK Loaded");
+          setRazorpayLoaded(true);
+        }}
+        onError={() => {
+          console.log("❌ Razorpay SDK Failed");
+        }}
+      />
 
       <div className="min-h-screen bg-[#0B0C10] px-4 py-6">
         <div className="mx-auto max-w-4xl">
@@ -284,7 +306,7 @@ console.log("Opening Razorpay...");
 
                   <button
                     disabled={isCardDisabled || isBusy}
-                    onClick={() => handleSubscribe(tier.id as "intro" | "regular")}
+                    onClick={() => handleSubscribeClick(tier.id as "intro" | "regular")}
                     className={`mt-8 rounded-xl px-4 py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
                       isCardDisabled || isBusy
                         ? "bg-gray-800 text-gray-500 cursor-not-allowed"
@@ -312,6 +334,59 @@ console.log("Opening Razorpay...");
           </div>
         </div>
       </div>
+
+      {/* Membership Rules Modal */}
+      {showRulesModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1f232d] p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-white">Membership Rules</h2>
+              <button
+                onClick={() => setShowRulesModal(false)}
+                className="text-gray-500 hover:text-white transition"
+                aria-label="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <ul className="space-y-2.5 text-sm text-gray-300 max-h-64 overflow-y-auto pr-1">
+              {MEMBERSHIP_RULES.map((rule, i) => (
+                <li key={i} className="flex gap-2">
+                  <span className="text-amber-400 shrink-0">•</span>
+                  <span>{rule}</span>
+                </li>
+              ))}
+            </ul>
+
+            <label className="mt-5 flex items-start gap-2.5 text-sm text-gray-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={agreedToRules}
+                onChange={(e) => setAgreedToRules(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 accent-amber-500"
+              />
+              <span>I have read and agree to the membership rules above.</span>
+            </label>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => setShowRulesModal(false)}
+                className="flex-1 rounded-xl border border-white/10 py-3 text-sm font-semibold text-gray-300 hover:bg-white/5 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmRules}
+                disabled={!agreedToRules}
+                className="flex-1 rounded-xl bg-amber-500 py-3 text-sm font-bold text-black hover:bg-amber-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

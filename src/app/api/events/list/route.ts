@@ -7,9 +7,11 @@ export async function GET(request: Request) {
     const userId = searchParams.get("userId");
 
     // 1. Fetch all events
+    // 1. Fetch only upcoming events (hide anything whose date has passed)
     const { data: events, error: eventsError } = await supabaseAdmin
       .from("events")
       .select("*")
+      .gte("event_date", new Date().toISOString())
       .order("event_date", { ascending: true });
 
     if (eventsError) throw eventsError;
