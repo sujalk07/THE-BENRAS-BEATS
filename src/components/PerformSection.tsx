@@ -83,7 +83,7 @@ export default function PerformerSection() {
     repeat: Infinity,
     ease: "easeInOut",
   }}
-  className="absolute right-3 top-1/2 z-10 h-[280px] w-[280px] select-none object-contain drop-shadow-[0_0_25px_rgba(255,160,60,0.16)] md:right-6 md:h-[360px] md:w-[360px] -translate-y-1/2"
+  className="absolute right-2 top-1/2 z-10 h-[320px] w-[320px] select-none object-contain drop-shadow-[0_0_25px_rgba(255,160,60,0.16)] md:right-4 md:h-[420px] md:w-[420px] -translate-y-1/2"
  />
         </div>
 
