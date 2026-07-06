@@ -74,18 +74,16 @@ export default function PerformerSection() {
          <motion.img
   src={sticker.src}
   alt="Artist Illustration"
-  drag
-  dragMomentum
-  dragElastic={0.2}
   animate={{
-    y: [0, -12, 0],
+    y: [0, -10, 0],
+    rotate: [-2, 2, -2],
   }}
   transition={{
-    duration: 3,
+    duration: 6,
     repeat: Infinity,
     ease: "easeInOut",
   }}
-  className="absolute right-2 top-1/2 z-10 w-28 h-28 md:right-6 md:w-36 md:h-36 -translate-y-1/2 select-none object-contain drop-shadow-[0_0_25px_rgba(255,160,60,0.16)] cursor-grab active:cursor-grabbing"
+  className="absolute right-2 top-1/2 z-10 h-28 w-28 select-none object-contain drop-shadow-[0_0_25px_rgba(255,160,60,0.16)] md:right-6 md:h-36 md:w-36 -translate-y-1/2"
  />
         </div>
 
