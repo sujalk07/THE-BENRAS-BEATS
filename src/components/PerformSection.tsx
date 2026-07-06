@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Mic2, Sparkles, ArrowRight } from "lucide-react";
+import { Mic2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 import sticker from "@/assets/sticker.png";
@@ -17,41 +17,23 @@ export default function PerformerSection() {
     : "/signup?redirectTo=/performer/apply";
 
   return (
-    <section className="relative overflow-hidden bg-[#050508] py-12 px-6">
-
-      {/* Background Glow */}
+    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050508] px-4 py-4">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute left-10 top-10 h-72 w-72 rounded-full bg-purple-600/10 blur-[140px]" />
-        <div className="absolute right-10 bottom-10 h-80 w-80 rounded-full bg-amber-500/10 blur-[160px]" />
-        <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-500/5 blur-[180px]" />
+        <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-600/10 blur-[140px]" />
+        <div className="absolute right-0 bottom-0 h-[400px] w-[400px] rounded-full bg-amber-500/10 blur-[160px]" />
       </div>
 
-      {/* Main Card */}
-      <div className="relative mx-auto max-w-5xl overflow-hidden rounded-[32px] border border-purple-500/20 bg-gradient-to-br from-[#0b0b14] via-[#090911] to-[#050508] shadow-[0_0_80px_rgba(168,85,247,0.12)]">
-
-        {/* Decorative Glow */}
-        <div className="absolute inset-0">
-          <div className="absolute left-20 top-20 h-64 w-64 rounded-full bg-purple-600/10 blur-[120px]" />
-          <div className="absolute right-0 bottom-0 h-80 w-80 rounded-full bg-amber-500/10 blur-[140px]" />
-        </div>
-
-        <div className="relative grid items-center gap-10 px-8 py-10 md:grid-cols-2 md:px-16 md:py-12">
-
-          {/* LEFT SIDE */}
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-xs uppercase tracking-widest text-amber-300">
-              <Sparkles className="h-4 w-4" />
-              Artist Spotlight
-            </div>
-
+      <div className="relative mx-auto w-full max-w-6xl overflow-hidden rounded-[32px] border border-purple-500/20 bg-gradient-to-br from-[#0b0b14] via-[#090911] to-[#050508] shadow-[0_0_80px_rgba(168,85,247,0.12)]">
+        <div className="relative min-h-[460px] flex items-center justify-between gap-10 px-6 py-16 md:px-20 md:py-24">
+          <div className="relative z-20 w-full max-w-2xl text-left flex flex-col items-start">
             <motion.h2
               initial={{ opacity: 0, y: 15 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
-              className="mt-8 text-5xl font-serif leading-tight text-white md:text-6xl"
+              className="bg-gradient-to-b from-white via-gray-100 to-purple-300/80 bg-clip-text font-serif text-5xl font-medium leading-tight text-transparent md:text-6xl"
             >
-              Want To
+              Want to
               <br />
               Perform?
             </motion.h2>
@@ -61,15 +43,14 @@ export default function PerformerSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
               viewport={{ once: true }}
-              className="mt-6 max-w-lg text-lg leading-8 text-gray-400"
+              className="mt-4 max-w-md text-left text-base leading-6 text-purple-200/70 md:text-lg mix-blend-plus-lighting"
             >
-              Are you an independent musician interested in performing at
-              <span className="font-semibold text-white">
-                {" "}
+              Are you a musician interested in performing at{" "}
+              <span className="font-semibold text-amber-300 shadow-amber-500/10">
                 The Benaras Beats
               </span>
-              ? Showcase your music, connect with audiences, and become part of
-              our growing artist community.
+              ? Showcase your talent, connect with audiences, and become part of
+              our vibrant artist community.
             </motion.p>
 
             <motion.div
@@ -77,60 +58,38 @@ export default function PerformerSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
               viewport={{ once: true }}
-              className="mt-10"
+              className="mt-6 flex justify-start w-full"
             >
-              {/* Updated button classes to use your requested design */}
               <Link
                 href={performerUrl}
-                className="group inline-flex items-center gap-3 rounded-xl border border-purple-500/40 bg-black/40 backdrop-blur-sm px-8 py-3.5 font-medium text-white shadow-[0_0_15px_rgba(168,85,247,0.05)] transition-all duration-300 hover:border-purple-400 hover:bg-purple-950/20 hover:shadow-[0_0_30px_rgba(168,85,247,0.45)] active:scale-[0.98]"
+                className="relative group overflow-hidden rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 font-semibold text-black shadow-[0_0_20px_rgba(245,158,11,0.25)] transition-all duration-300 hover:from-amber-400 hover:to-amber-500 hover:shadow-[0_0_35px_rgba(245,158,11,0.6)] active:scale-[0.98] inline-flex items-center gap-3 text-base"
               >
                 <Mic2 className="h-5 w-5" />
-
                 <span>Apply as Artist</span>
-
                 <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
             </motion.div>
           </div>
 
-          {/* RIGHT SIDE */}
-          <motion.div
-            className="relative flex items-center justify-center"
-            animate={{
-              y: [0, -12, 0],
-            }}
-            transition={{
-              duration: 5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          >
-            {/* Glow Behind Sticker */}
-            <div className="absolute h-[420px] w-[420px] rounded-full bg-purple-500/15 blur-[120px]" />
-
-            <img
-              src={sticker.src}
-              alt="Artist Illustration"
-              className="
-                relative
-                z-10
-                w-full
-                max-w-[520px]
-                md:max-w-[600px]
-                lg:max-w-[680px]
-                object-contain
-                select-none
-                pointer-events-none
-                drop-shadow-[0_0_40px_rgba(255,160,60,0.35)]
-              "
-            />
-          </motion.div>
-
+         <motion.img
+  src={sticker.src}
+  alt="Artist Illustration"
+  drag
+  dragMomentum
+  dragElastic={0.2}
+  animate={{
+    y: [0, -12, 0],
+  }}
+  transition={{
+    duration: 3,
+    repeat: Infinity,
+    ease: "easeInOut",
+  }}
+  className="absolute right-2 top-1/2 z-10 w-28 h-28 md:right-6 md:w-36 md:h-36 -translate-y-1/2 select-none object-contain drop-shadow-[0_0_25px_rgba(255,160,60,0.16)] cursor-grab active:cursor-grabbing"
+ />
         </div>
 
-        {/* Bottom Border Glow */}
         <div className="absolute bottom-0 left-0 h-[1px] w-full bg-gradient-to-r from-transparent via-purple-500/60 to-transparent" />
-
       </div>
     </section>
   );
