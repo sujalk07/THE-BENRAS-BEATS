@@ -13,6 +13,7 @@
     "@fontsource/playfair-display": "^5.2.8",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.2",
+    "framer-motion": "^12.42.2",
     "html2canvas": "^1.4.1",
     "lucide-react": "^1.21.0",
     "next": "16.2.9",
