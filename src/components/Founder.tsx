@@ -69,9 +69,9 @@ export default function Founder() {
                 Hindu University and currently serves as a Counselling
                 Psychologist at IIT (BHU), Varanasi. He is also the Founder of{" "}
                 <span className="text-gray-200 font-medium">
-                  Changing Minds Mental Health Care
+                  Changing Minds Mental Health Care{" "}
                 </span>
-                and
+                and{" "}
                 <span className="text-gray-200 font-medium">
                   THE BENARAS BEATS
                 </span>
