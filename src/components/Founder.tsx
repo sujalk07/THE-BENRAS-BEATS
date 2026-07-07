@@ -71,6 +71,10 @@ export default function Founder() {
                 <span className="text-gray-200 font-medium">
                   Changing Minds Mental Health Care
                 </span>
+                and
+                <span className="text-gray-200 font-medium">
+                  THE BENARAS BEATS
+                </span>
                 .
               </p>
 
