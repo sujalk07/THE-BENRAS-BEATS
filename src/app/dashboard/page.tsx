@@ -45,7 +45,7 @@ export default function DashboardPage() {
           Welcome back, {user.email}
         </p>
 
-        <div className="mt-8 grid gap-6 md:grid-cols-3">
+        <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
             <LayoutDashboard className="text-amber-400" />
             <h2 className="mt-4 text-xl font-semibold">Overview</h2>
@@ -72,6 +72,17 @@ export default function DashboardPage() {
               Check your plan status and benefits.
             </p>
           </div>
+
+          <Link
+            href="/dashboard/members"
+            className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 hover:border-amber-500/40 transition-colors"
+          >
+            <Crown className="text-amber-400" />
+            <h2 className="mt-4 text-xl font-semibold">Members</h2>
+            <p className="mt-2 text-sm text-gray-400">
+              See our esteemed members and the full member directory.
+            </p>
+          </Link>
         </div>
       </div>
     </main>

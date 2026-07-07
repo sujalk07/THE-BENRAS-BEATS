@@ -1,6 +1,6 @@
 import React from 'react';
 import { Music4} from 'lucide-react';
-import { FaInstagram, FaXTwitter, FaYoutube } from "react-icons/fa6";
+import { FaInstagram, FaFacebook, FaYoutube } from "react-icons/fa6";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -38,11 +38,11 @@ export default function Footer() {
               <FaInstagram className="w-4 h-4" />
             </a>
             <a 
-              href="#" 
-              aria-label="Twitter"
+              href="https://www.facebook.com/share/18cWLBSfN2/" 
+              aria-label="Facebook"
               className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-900/40 border border-gray-800/80 text-gray-400 hover:text-cyan-400 hover:border-cyan-500/30 hover:shadow-[0_0_15px_rgba(34,211,238,0.1)] transition-all duration-300"
             >
-              <FaXTwitter className="w-4 h-4" />
+              <FaFacebook className="w-4 h-4" />
             </a>
             <a 
               href="#" 

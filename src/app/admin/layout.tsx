@@ -14,6 +14,7 @@ const adminLinks = [
   { name: "Registrations", href: "/admin/registrations", icon: Users },
   { name: "Memberships", href: "/admin/memberships", icon: CreditCard },
   { name: "Performers", href: "/admin/performers", icon: Mic2 },
+  { name: "Esteemed Members", href: "/admin/featured-members", icon: Users }
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
