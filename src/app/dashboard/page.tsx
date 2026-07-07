@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { LayoutDashboard, Ticket, Crown, ArrowLeft } from "lucide-react";
+import { Ticket, Crown, ArrowLeft } from "lucide-react";
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
@@ -45,15 +45,7 @@ export default function DashboardPage() {
           Welcome back, {user.email}
         </p>
 
-        <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <LayoutDashboard className="text-amber-400" />
-            <h2 className="mt-4 text-xl font-semibold">Overview</h2>
-            <p className="mt-2 text-sm text-gray-400">
-              Your membership, events, and account activity in one place.
-            </p>
-          </div>
-
+        <div className="mt-8 grid gap-6 sm:grid-cols-2">
           <Link
             href="/dashboard/tickets"
             className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 hover:border-amber-500/40 transition-colors"
@@ -64,14 +56,6 @@ export default function DashboardPage() {
               View your registered events and upcoming access.
             </p>
           </Link>
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <Crown className="text-amber-400" />
-            <h2 className="mt-4 text-xl font-semibold">Membership</h2>
-            <p className="mt-2 text-sm text-gray-400">
-              Check your plan status and benefits.
-            </p>
-          </div>
 
           <Link
             href="/dashboard/members"

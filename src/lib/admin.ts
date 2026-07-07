@@ -1,5 +1,5 @@
 // lib/admin.ts
-export const ADMIN_EMAILS = ["sujalbarnwal789@gmail.com", "sujal07@gmail.com"];
+export const ADMIN_EMAILS = ["sujalbarnwal789@gmail.com", "sujal07@gmail.com", "thebenarasbeats@gmail.com"];
 
 export function isAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false;

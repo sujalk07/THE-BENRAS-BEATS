@@ -34,7 +34,7 @@ export async function sendTicketConfirmationEmail({
 
   try {
     const { error } = await resend.emails.send({
-      from: "The Benaras Beats <onboarding@resend.dev>",
+      from: "The Benaras Beats <tickets@thebenarasbeats.com>",
       to,
       subject: `🎟️ Your ticket for ${eventTitle} is confirmed!`,
       html: `
