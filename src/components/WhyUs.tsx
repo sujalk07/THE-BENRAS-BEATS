@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
-import { Music, Users, Heart, Mic } from 'lucide-react';
+import Link from 'next/link';
+import { Music, Users, Heart, Mic, ArrowRight } from 'lucide-react';
 
 export default function WhyUs() {
   const cards = [
@@ -31,18 +34,14 @@ export default function WhyUs() {
 
   return (
     <section className="relative px-6 py-24 bg-[#050508] text-white overflow-hidden">
-      {/* Optional ambient background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-900/10 blur-[120px] pointer-events-none rounded-full" />
 
       <div className="relative mx-auto max-w-7xl">
-        
-        {/* Header Section */}
         <div className="flex flex-col items-center mb-16 text-center">
           <h2 className="text-4xl md:text-5xl font-serif tracking-wide text-gray-100">
             Why The Benaras Beats?
           </h2>
-          
-          {/* Decorative Divider */}
+
           <div className="flex items-center justify-center gap-4 mt-4 w-full max-w-xs">
             <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-amber-500/50" />
             <span className="text-amber-500 text-sm animate-pulse">🎵</span>
@@ -50,14 +49,12 @@ export default function WhyUs() {
           </div>
         </div>
 
-        {/* Feature Cards Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {cards.map((card, idx) => (
             <div
               key={idx}
               className={`group flex flex-col items-center text-center rounded-2xl border border-gray-800/60 bg-[#0b0c10]/60 p-8 backdrop-blur-sm transition-all duration-300 ease-out cursor-pointer ${card.hoverColor}`}
             >
-              {/* Icon Container with Floating Glow Wrapper */}
               <div className="relative mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gray-900/50 border border-gray-800 group-hover:border-transparent transition-colors duration-300">
                 {card.icon}
               </div>
@@ -73,6 +70,24 @@ export default function WhyUs() {
           ))}
         </div>
 
+        <div className="mt-14 flex flex-col gap-5 rounded-2xl border border-white/10 bg-[#0b0c10]/60 backdrop-blur-sm px-6 py-6 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:px-8">
+          <div className="flex items-center gap-4">
+            <Heart className="h-6 w-6 shrink-0 text-red-500 fill-red-500 animate-pulse drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
+            <p className="text-sm leading-relaxed text-gray-300 sm:text-base">
+              Whether you seek peace, celebration, devotion, or inspiration,
+              there's a genre that resonates with every heart.
+            </p>
+          </div>
+
+          <Link
+            href="/genres"
+            className="group relative inline-flex shrink-0 items-center justify-center gap-3 overflow-hidden rounded-xl bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-500 px-8 py-3.5 font-semibold text-white shadow-[0_0_22px_rgba(168,85,247,0.45)] transition-all duration-300 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-400 hover:shadow-[0_0_42px_rgba(168,85,247,0.75)] hover:-translate-y-0.5 active:scale-[0.98]"
+          >
+            <Music className="h-4 w-4" />
+            <span>Explore Our Genres</span>
+            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+          </Link>
+        </div>
       </div>
     </section>
   );

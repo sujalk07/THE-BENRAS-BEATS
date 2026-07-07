@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Mic2, ArrowRight } from "lucide-react";
+import { Mic2, ArrowRight, Guitar, Mic } from "lucide-react";
 import Link from "next/link";
 
 import sticker from "@/assets/sticker.png";
@@ -12,9 +12,11 @@ export default function PerformerSection() {
   const { user } = useAuth();
   const isLoggedIn = !!user;
 
+  const [artistType, setArtistType] = useState<"singer" | "instrumentalist">("singer");
+
   const performerUrl = isLoggedIn
-    ? "/performer/apply"
-    : "/signup?redirectTo=/performer/apply";
+    ? `/performer/apply?type=${artistType}`
+    : `/signup?redirectTo=${encodeURIComponent(`/performer/apply?type=${artistType}`)}`;
 
   return (
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050508] px-4 py-4">
@@ -58,7 +60,7 @@ export default function PerformerSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
               viewport={{ once: true }}
-              className="mt-6 flex justify-start w-full"
+              className="mt-6 flex flex-col items-start gap-3 w-full"
             >
               <Link
                 href={performerUrl}
@@ -68,23 +70,51 @@ export default function PerformerSection() {
                 <span>Apply as Artist</span>
                 <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
+
+              {/* Artist type selector */}
+              <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] p-1">
+                <button
+                  type="button"
+                  onClick={() => setArtistType("singer")}
+                  className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                    artistType === "singer"
+                      ? "bg-amber-500 text-black"
+                      : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  <Mic size={13} />
+                  Singer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setArtistType("instrumentalist")}
+                  className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                    artistType === "instrumentalist"
+                      ? "bg-amber-500 text-black"
+                      : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  <Guitar size={13} />
+                  Instrumentalist
+                </button>
+              </div>
             </motion.div>
           </div>
 
-         <motion.img
-  src={sticker.src}
-  alt="Artist Illustration"
-  animate={{
-    y: [0, -10, 0],
-    rotate: [-2, 2, -2],
-  }}
-  transition={{
-    duration: 6,
-    repeat: Infinity,
-    ease: "easeInOut",
-  }}
-  className="absolute right-2 top-1/2 z-10 h-[320px] w-[320px] select-none object-contain drop-shadow-[0_0_25px_rgba(255,160,60,0.16)] md:right-4 md:h-[420px] md:w-[420px] -translate-y-1/2"
- />
+          <motion.img
+            src={sticker.src}
+            alt="Artist Illustration"
+            animate={{
+              y: [0, -10, 0],
+              rotate: [-2, 2, -2],
+            }}
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="absolute right-2 top-1/2 z-10 h-[320px] w-[320px] select-none object-contain drop-shadow-[0_0_25px_rgba(255,160,60,0.16)] md:right-4 md:h-[420px] md:w-[420px] -translate-y-1/2"
+          />
         </div>
 
         <div className="absolute bottom-0 left-0 h-[1px] w-full bg-gradient-to-r from-transparent via-purple-500/60 to-transparent" />

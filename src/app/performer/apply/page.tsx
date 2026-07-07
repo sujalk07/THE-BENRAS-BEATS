@@ -1,15 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { useRouter } from "next/navigation";
-import { Music, Radio, Link as LinkIcon, Disc, AlignLeft, User, Phone, Mail } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Music, Link as LinkIcon, Disc, User, Phone, Mail, Mic, Guitar } from "lucide-react";
 
-export default function PerformerApplyPage() {
+function PerformerApplyForm() {
   const { user } = useAuth();
   const router = useRouter();
-  
+  const searchParams = useSearchParams();
+
+  const initialType = searchParams.get("type") === "instrumentalist" ? "instrumentalist" : "singer";
+
   const [loading, setLoading] = useState(false);
+  const [artistType, setArtistType] = useState<"singer" | "instrumentalist">(initialType);
   const [formData, setFormData] = useState({
     artistName: "",
     genre: "",
@@ -20,13 +24,20 @@ export default function PerformerApplyPage() {
     email: "",
   });
 
+  useEffect(() => {
+    const typeParam = searchParams.get("type");
+    if (typeParam === "instrumentalist" || typeParam === "singer") {
+      setArtistType(typeParam);
+    }
+  }, [searchParams]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user) {
       alert("Please login to submit your performer application.");
       router.push(`/login?redirect=/performer/apply`);
@@ -41,6 +52,7 @@ export default function PerformerApplyPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: user.id,
+          artistType,
           ...formData,
         }),
       });
@@ -52,7 +64,6 @@ export default function PerformerApplyPage() {
       }
 
       alert("🎉 " + data.message);
-      // Reset form on success
       setFormData({
         artistName: "",
         genre: "",
@@ -73,7 +84,6 @@ export default function PerformerApplyPage() {
   return (
     <div className="min-h-screen bg-[#0B0C10] py-16 px-4 selection:bg-amber-500 selection:text-black">
       <div className="max-w-2xl mx-auto">
-        
         <div className="text-center mb-10">
           <h1 className="text-4xl font-extrabold text-white tracking-tight mb-3">
             Perform at <span className="text-amber-500">Benaras Beats</span>
@@ -85,7 +95,39 @@ export default function PerformerApplyPage() {
 
         <div className="bg-[#1f232d]/60 border border-white/10 rounded-3xl p-8 backdrop-blur-md shadow-2xl">
           <form onSubmit={handleSubmit} className="space-y-6">
-            
+            {/* Artist Type Toggle */}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+                I am applying as a
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setArtistType("singer")}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
+                    artistType === "singer"
+                      ? "border-amber-500 bg-amber-500/10 text-amber-400"
+                      : "border-white/10 bg-[#0B0C10]/60 text-gray-400 hover:text-white"
+                  }`}
+                >
+                  <Mic size={16} />
+                  Singer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setArtistType("instrumentalist")}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
+                    artistType === "instrumentalist"
+                      ? "border-amber-500 bg-amber-500/10 text-amber-400"
+                      : "border-white/10 bg-[#0B0C10]/60 text-gray-400 hover:text-white"
+                  }`}
+                >
+                  <Guitar size={16} />
+                  Instrumentalist
+                </button>
+              </div>
+            </div>
+
             {/* Artist Stage Name */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
@@ -223,10 +265,23 @@ export default function PerformerApplyPage() {
                 {loading ? "Submitting Application..." : "Submit Application Portfolio"}
               </button>
             </div>
-
           </form>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PerformerApplyPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center text-gray-400">
+          Loading...
+        </div>
+      }
+    >
+      <PerformerApplyForm />
+    </Suspense>
   );
 }

@@ -24,6 +24,7 @@ interface PerformerRequest {
   sample_track_url: string | null;
   contact_number: string | null;
   email: string | null;
+  artist_type: string | null;
   submitted_at: string;
 }
 
@@ -198,9 +199,14 @@ export default function AdminPerformersPage() {
     {app.artist_name}
   </span>
 
-  <span className="text-sm font-medium text-amber-400">
-    {app.genre}
+  <span className="shrink-0 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-400">
+  {app.genre}
+</span>
+{app.artist_type && (
+  <span className="shrink-0 rounded-full bg-purple-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-purple-400">
+    {app.artist_type}
   </span>
+)}
 </div>
 
                       <div className="mt-2 text-sm text-gray-400">

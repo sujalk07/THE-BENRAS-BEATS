@@ -10,8 +10,17 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 
 export async function POST(request: Request) {
   try {
-    const { userId, artistName, genre, bio, socialLink, sampleTrackUrl, contactNumber, email } =
-      await request.json();
+    const {
+      userId,
+      artistName,
+      genre,
+      bio,
+      socialLink,
+      sampleTrackUrl,
+      contactNumber,
+      email,
+      artistType,
+    } = await request.json();
 
     if (!userId || !artistName || !genre || !contactNumber || !email) {
       return NextResponse.json({ error: "Required fields are missing." }, { status: 400 });
@@ -28,6 +37,7 @@ export async function POST(request: Request) {
         sample_track_url: sampleTrackUrl,
         contact_number: contactNumber,
         email,
+        artist_type: artistType ?? null,
       })
       .select()
       .single();
