@@ -34,8 +34,21 @@ export default function Founder() {
               <h3 className="text-lg font-semibold text-gray-100 tracking-wide">
                 Dr. Laxman Yadav
               </h3>
-              <p className="text-xs text-amber-500/80 tracking-wider uppercase mt-1">
-                Founder & Clinical Psychologist
+              <p className="mt-2 text-xs leading-relaxed text-gray-400 max-w-[16rem] mx-auto">
+                Consultant Counseling Psychologist,{" "}
+                <span className="font-semibold text-amber-400">IIT (BHU)</span>{" "}
+                | Founder,{" "}
+                <span className="font-semibold text-amber-400">
+                  Changing Minds Mental Health Care
+                </span>{" "}
+                | Founding Member,{" "}
+                <span className="font-semibold text-amber-400">
+                  Indian Academy of Mental Health (IAMH)
+                </span>{" "}
+                &{" "}
+                <span className="font-semibold text-amber-400">
+                  The Benaras Beats Music Club
+                </span>
               </p>
             </div>
           </div>
@@ -69,11 +82,7 @@ export default function Founder() {
                 Hindu University and currently serves as a Counselling
                 Psychologist at IIT (BHU), Varanasi. He is also the Founder of{" "}
                 <span className="text-gray-200 font-medium">
-                  Changing Minds Mental Health Care{" "}
-                </span>
-                and{" "}
-                <span className="text-gray-200 font-medium">
-                  THE BENARAS BEATS
+                  Changing Minds Mental Health Care
                 </span>
                 .
               </p>
