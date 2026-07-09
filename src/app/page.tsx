@@ -6,7 +6,9 @@ import MembershipBenefits from "../components/MembershipBenefits";
 import PerformSection from "../components/PerformSection";
 import Founder from "../components/Founder";
 import Sponsors from "../components/Sponsors";
+import Feedback from "../components/Feedback";
 import Footer from "../components/Footer";
+
 export default function Home() {
   return (
     <>
@@ -18,6 +20,7 @@ export default function Home() {
       <PerformSection />
       <Founder />
       <Sponsors />
+      <Feedback />
       <Footer />
     </>
   );
