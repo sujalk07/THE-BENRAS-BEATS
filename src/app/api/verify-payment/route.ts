@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
+import { generateCertificatePDF } from "@/lib/certificate";
+import { sendMembershipCertificateEmail } from "@/lib/email";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -143,6 +145,31 @@ export async function POST(request: Request) {
 
     if (profileError) {
       throw profileError;
+    }
+
+    // ==========================
+    // Generate & email the membership certificate
+    // (Non-blocking failure — membership is already active regardless of email outcome)
+    // ==========================
+    try {
+      const [{ data: profile }, { data: authUser }] = await Promise.all([
+        supabaseAdmin.from("profiles").select("full_name").eq("id", userId).maybeSingle(),
+        supabaseAdmin.auth.admin.getUserById(userId),
+      ]);
+
+      const memberName = profile?.full_name ?? "Valued Member";
+      const userEmail = authUser?.user?.email;
+
+      const durationText = `${startsAt.toLocaleDateString("en-IN", {
+        dateStyle: "medium",
+      })} to ${expiresAt.toLocaleDateString("en-IN", { dateStyle: "medium" })}`;
+
+      if (userEmail) {
+        const certificateBuffer = await generateCertificatePDF(memberName, durationText);
+        await sendMembershipCertificateEmail(userEmail, memberName, certificateBuffer);
+      }
+    } catch (certErr) {
+      console.error("Certificate generation/email failed (membership still activated):", certErr);
     }
 
     return NextResponse.json({

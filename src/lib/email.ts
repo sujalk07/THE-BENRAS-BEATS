@@ -128,3 +128,46 @@ export async function sendMembershipOpenAnnouncement(to: string) {
     return { success: false, error: err.message };
   }
 }
+export async function sendMembershipCertificateEmail(
+  to: string,
+  memberName: string,
+  certificateBuffer: Buffer
+) {
+  try {
+    const { error } = await resend.emails.send({
+      from: "The Benaras Beats <tickets@thebenarasbeats.com>",
+      to,
+      subject: "🎓 Your Official Membership Certificate — The Benaras Beats",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #0B0C10; color: #ffffff; padding: 32px; border-radius: 16px;">
+          <div style="background: #f59e0b; padding: 16px 24px; border-radius: 12px 12px 0 0; margin: -32px -32px 24px -32px;">
+            <h2 style="margin: 0; color: #000000; font-size: 18px;">THE BENARAS BEATS</h2>
+          </div>
+
+          <h1 style="font-size: 22px; margin-bottom: 8px;">Congratulations, ${memberName}! 🎉</h1>
+          <p style="color: #9ca3af; font-size: 14px; margin-bottom: 24px; line-height: 1.6;">
+            You are now an official member of The Benaras Beats. Your
+            personalized membership certificate is attached to this email —
+            keep it as a token of your journey with us.
+          </p>
+
+          <p style="color: #6b7280; font-size: 11px; margin-top: 24px; text-align: center;">
+            Music for Mind & Soul
+          </p>
+        </div>
+      `,
+      attachments: [
+        {
+          filename: `${memberName.replace(/\s+/g, "_")}_Membership_Certificate.pdf`,
+          content: certificateBuffer,
+        },
+      ],
+    });
+
+    if (error) {
+      console.error("Resend certificate email error:", error);
+    }
+  } catch (err) {
+    console.error("Failed to send certificate email:", err);
+  }
+}
