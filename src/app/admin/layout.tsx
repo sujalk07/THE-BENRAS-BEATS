@@ -6,7 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { isAdminEmail } from "@/lib/admin";
-import { LayoutDashboard, CalendarDays, Users, CreditCard, ArrowLeft, Mic2, Music } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, CreditCard, ArrowLeft, Mic2, Music, Bell } from "lucide-react";
 
 const adminLinks = [
   { name: "Overview", href: "/admin", icon: LayoutDashboard },
@@ -16,6 +16,7 @@ const adminLinks = [
   { name: "Performers", href: "/admin/performers", icon: Mic2 },
   { name: "Esteemed Members", href: "/admin/featured-members", icon: Users },
   { name: "Music Genres", href: "/admin/genres", icon: Music },
+  { name: "Waitlist", href: "/admin/membership-waitlist", icon: Bell },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

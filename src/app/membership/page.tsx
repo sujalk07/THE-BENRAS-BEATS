@@ -5,13 +5,16 @@ import { useRouter } from "next/navigation";
 
 import Script from "next/script";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { Check, Music, Sparkles, ArrowLeft, Loader2, X } from "lucide-react";
+import { Check, Music, Sparkles, ArrowLeft, Loader2, X, Bell, Mail } from "lucide-react";
 import { Cormorant_Garamond } from "next/font/google";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
 });
+
+// Toggle this to false once Razorpay live mode is approved and ready
+const MEMBERSHIPS_ENABLED = false;
 
 const tiers = [
   {
@@ -71,7 +74,20 @@ export default function MembershipPage() {
   const [pendingPlan, setPendingPlan] = useState<"intro" | "regular" | null>(null);
   const [agreedToRules, setAgreedToRules] = useState(false);
 
+  // Waitlist form state
+  const [waitlistEmail, setWaitlistEmail] = useState(user?.email ?? "");
+  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
+  const [waitlistSuccess, setWaitlistSuccess] = useState<string | null>(null);
+
   useEffect(() => {
+    if (user?.email) setWaitlistEmail(user.email);
+  }, [user]);
+
+  useEffect(() => {
+    if (!MEMBERSHIPS_ENABLED) {
+      setPageLoading(false);
+      return;
+    }
     fetch("/api/membership-status")
       .then((res) => res.json())
       .then((data) => {
@@ -82,7 +98,33 @@ export default function MembershipPage() {
       .finally(() => setPageLoading(false));
   }, []);
 
-  // Step 1: user clicks "Become a Member" — open the rules modal instead of paying immediately
+  const handleWaitlistSubmit = async () => {
+    if (!waitlistEmail) {
+      alert("Please enter your email.");
+      return;
+    }
+
+    setWaitlistSubmitting(true);
+    setWaitlistSuccess(null);
+    try {
+      const res = await fetch("/api/membership-waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: waitlistEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Something went wrong.");
+        return;
+      }
+      setWaitlistSuccess(data.message);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setWaitlistSubmitting(false);
+    }
+  };
+
   const handleSubscribeClick = (plan: "intro" | "regular") => {
     if (plan === "intro" && soldOut) {
       alert("This offer has expired!");
@@ -99,7 +141,6 @@ export default function MembershipPage() {
     setShowRulesModal(true);
   };
 
-  // Step 2: user confirms agreement in the modal — proceed with actual payment flow
   const handleConfirmRules = () => {
     if (!agreedToRules || !pendingPlan) return;
     setShowRulesModal(false);
@@ -199,6 +240,77 @@ export default function MembershipPage() {
     );
   }
 
+  // ============================================================
+  // MEMBERSHIPS DISABLED — show waitlist form instead
+  // ============================================================
+  if (!MEMBERSHIPS_ENABLED) {
+    return (
+      <div className="min-h-screen bg-[#0B0C10] px-4 py-6">
+        <div className="mx-auto max-w-2xl">
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            className="mb-8 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-amber-400 transition hover:bg-white/10 hover:text-amber-300"
+          >
+            <ArrowLeft size={16} />
+            Back to Home
+          </button>
+
+          <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-8 sm:p-12 text-center">
+            <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400">
+              <Bell size={26} />
+            </div>
+
+            <h1
+              className={`${cormorant.className} text-3xl sm:text-4xl font-bold text-white mb-3`}
+            >
+              Memberships Are Coming Soon
+            </h1>
+            <p className="text-sm sm:text-base text-gray-400 max-w-md mx-auto leading-relaxed">
+              Membership purchases are temporarily unavailable while we
+              finish setting things up. Leave your email below and we'll
+              notify you the moment it opens.
+            </p>
+
+            {waitlistSuccess ? (
+              <div className="mt-8 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-400">
+                {waitlistSuccess}
+              </div>
+            ) : (
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center">
+                <div className="relative flex-1 max-w-xs">
+                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={waitlistEmail}
+                    onChange={(e) => setWaitlistEmail(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:border-amber-500 focus:outline-none"
+                  />
+                </div>
+                <button
+                  onClick={handleWaitlistSubmit}
+                  disabled={waitlistSubmitting}
+                  className="flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-6 py-3 text-sm font-bold text-black transition hover:bg-amber-400 disabled:opacity-50"
+                >
+                  {waitlistSubmitting ? (
+                    <Loader2 size={15} className="animate-spin" />
+                  ) : (
+                    <Bell size={15} />
+                  )}
+                  Notify Me
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ============================================================
+  // MEMBERSHIPS ENABLED — normal purchase flow (unchanged)
+  // ============================================================
   return (
     <>
       <Script

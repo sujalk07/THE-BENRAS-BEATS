@@ -88,3 +88,43 @@ export async function sendTicketConfirmationEmail({
     console.error("Failed to send ticket email:", err);
   }
 }
+
+export async function sendMembershipOpenAnnouncement(to: string) {
+  try {
+    const { error } = await resend.emails.send({
+      from: "The Benaras Beats <tickets@thebenarasbeats.com>",
+      to,
+      subject: "🎉 Memberships are now open at The Benaras Beats!",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #0B0C10; color: #ffffff; padding: 32px; border-radius: 16px;">
+          <div style="background: #f59e0b; padding: 16px 24px; border-radius: 12px 12px 0 0; margin: -32px -32px 24px -32px;">
+            <h2 style="margin: 0; color: #000000; font-size: 18px;">THE BENARAS BEATS</h2>
+          </div>
+
+          <h1 style="font-size: 22px; margin-bottom: 8px;">Memberships are here! 🎉</h1>
+          <p style="color: #9ca3af; font-size: 14px; margin-bottom: 24px; line-height: 1.6;">
+            You asked us to let you know — memberships are now open at The Benaras Beats.
+            Get priority access to events, join our exclusive community, and unlock member-only experiences.
+          </p>
+
+          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/membership" style="display: block; text-align: center; background: #f59e0b; color: #000000; font-weight: bold; padding: 14px; border-radius: 10px; text-decoration: none; font-size: 14px;">
+            View Membership Plans
+          </a>
+
+          <p style="color: #6b7280; font-size: 11px; margin-top: 24px; text-align: center;">
+            You're receiving this because you asked to be notified.
+          </p>
+        </div>
+      `,
+    });
+
+    if (error) {
+      console.error("Resend membership announcement error:", error);
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err: any) {
+    console.error("Failed to send membership announcement:", err);
+    return { success: false, error: err.message };
+  }
+}

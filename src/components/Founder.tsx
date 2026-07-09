@@ -12,8 +12,8 @@ export default function Founder() {
       <div className="absolute bottom-0 left-10 w-[300px] h-[300px] bg-amber-950/5 blur-[100px] pointer-events-none rounded-full" />
 
       <div className="relative mx-auto max-w-5xl">
-        <div className="grid gap-12 items-center md:grid-cols-12">
-          {/* Left Column: Founder photo */}
+        <div className="grid gap-12 items-start md:grid-cols-12">
+          {/* Left Column: Founder photo + caption under image */}
           <div className="md:col-span-4 flex flex-col items-center">
             <div className="relative group">
               <div className="absolute -inset-1 rounded-2xl bg-gradient-to-b from-amber-500/20 to-purple-600/20 blur opacity-75 group-hover:opacity-100 transition duration-300" />
@@ -30,30 +30,15 @@ export default function Founder() {
               </div>
             </div>
 
+            {/* Caption under image */}
             <div className="mt-5 text-center">
-              <h3 className="text-lg font-semibold text-gray-100 tracking-wide">
+              <h3 className="text-sm font-medium text-gray-200 tracking-wide">
                 Dr. Laxman Yadav
               </h3>
-              <p className="mt-2 text-xs leading-relaxed text-gray-400 max-w-[16rem] mx-auto">
-                Consultant Counseling Psychologist,{" "}
-                <span className="font-semibold text-amber-400">IIT (BHU)</span>{" "}
-                | Founder,{" "}
-                <span className="font-semibold text-amber-400">
-                  Changing Minds Mental Health Care
-                </span>{" "}
-                | Founding Member,{" "}
-                <span className="font-semibold text-amber-400">
-                  Indian Academy of Mental Health (IAMH)
-                </span>{" "}
-                &{" "}
-                <span className="font-semibold text-amber-400">
-                  The Benaras Beats Music Club
-                </span>
-              </p>
             </div>
           </div>
 
-          {/* Right Column: Founder's Vision Statement */}
+          {/* Right Column: Larger descriptive text with highlights */}
           <div className="md:col-span-8 flex flex-col items-start text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs tracking-wider uppercase mb-4">
               <Sparkles className="w-3.5 h-3.5" />
@@ -65,35 +50,31 @@ export default function Founder() {
             </h2>
 
             <div className="space-y-4 text-sm md:text-base leading-relaxed text-gray-400">
-              <p>
-                Dr. Laxman Yadav is a Clinical Psychologist, mental health
-                advocate, and Founder of The Banaras Beats. With over 10
-                years of experience and having supported the mental
-                well-being of{" "}
-                <span className="text-amber-400 font-medium">
-                  50,000+ individuals
+              <p className="text-lg">
+                Dr. Laxman Yadav{" "}
+                <span className="text-amber-400 font-semibold">
+                  Consultant Counseling Psychologist, IIT (BHU)
+                </span>{" "}
+                <span className="text-gray-300">|</span>{" "}
+                <span className="text-amber-400 font-semibold">
+                  Founder, Changing Minds Mental Health Care
+                </span>{" "}
+                <span className="text-gray-300">|</span>{" "}
+                <span className="text-amber-400 font-semibold">
+                  Founding Member, Indian Academy of Mental Health (IAMH)
+                </span>{" "}
+                <span className="text-gray-300"> & </span>
+                <span className="text-amber-400 font-semibold">
+                  The Benaras Beats Music Club
                 </span>
-                , he is dedicated to making emotional wellness more
-                accessible through science, culture, and community.
               </p>
+            </div>
 
+            {/* Optional extra paragraph (keeps original shorter bio if you want) */}
+            <div className="space-y-4 text-sm md:text-base leading-relaxed text-gray-400 mt-4">
               <p>
-                He holds a Ph.D. in Clinical Psychology from IMS, Banaras
-                Hindu University and currently serves as a Counselling
-                Psychologist at IIT (BHU), Varanasi. He is also the Founder of{" "}
-                <span className="text-gray-200 font-medium">
-                  Changing Minds Mental Health Care
-                </span>
-                .
-              </p>
-
-              <p>
-                Driven by the belief that music is a powerful tool for
-                healing and human connection, Dr. Yadav founded The Banaras
-                Beats to bring people together through meaningful musical
-                experiences. The initiative celebrates diverse musical
-                traditions while fostering emotional well-being, reducing
-                stress, and strengthening community bonds.
+                With over 10 years of experience and having supported the emotional well-being of{" "}
+                <span className="text-amber-400 font-medium">50,000+ individuals</span>, he focuses on making wellness accessible through science, culture, and community.
               </p>
             </div>
 
