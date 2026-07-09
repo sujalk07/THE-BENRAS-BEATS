@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Music, Link as LinkIcon, Disc, User, Phone, Mail, Mic, Guitar } from "lucide-react";
+import { Music, Link as LinkIcon, Disc, User, Phone, Mail, Mic, Guitar, ArrowLeft } from "lucide-react";
 
 function PerformerApplyForm() {
   const { user } = useAuth();
@@ -84,6 +84,15 @@ function PerformerApplyForm() {
   return (
     <div className="min-h-screen bg-[#0B0C10] py-16 px-4 selection:bg-amber-500 selection:text-black">
       <div className="max-w-2xl mx-auto">
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          className="mb-8 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-amber-400 transition hover:bg-white/10 hover:text-amber-300"
+        >
+          <ArrowLeft size={16} />
+          Back to Home
+        </button>
+
         <div className="text-center mb-10">
           <h1 className="text-4xl font-extrabold text-white tracking-tight mb-3">
             Perform at <span className="text-amber-500">Benaras Beats</span>
@@ -204,10 +213,11 @@ function PerformerApplyForm() {
               </div>
             </div>
 
-            {/* Biography */}
+            {/* Biography — optional */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
-                Artist Bio
+                Artist Bio{" "}
+                <span className="normal-case font-medium text-gray-500">(optional)</span>
               </label>
               <textarea
                 name="bio"
@@ -219,10 +229,11 @@ function PerformerApplyForm() {
               />
             </div>
 
-            {/* Social Link */}
+            {/* Social Link — optional */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
-                Instagram or Spotify Link
+                Instagram or Spotify Link{" "}
+                <span className="normal-case font-medium text-gray-500">(optional)</span>
               </label>
               <div className="relative">
                 <LinkIcon className="absolute left-4 top-3.5 text-gray-500" size={16} />
@@ -237,10 +248,11 @@ function PerformerApplyForm() {
               </div>
             </div>
 
-            {/* Sample Track URL */}
+            {/* Sample Track URL — optional */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
-                Demo / Sample Performance Link (SoundCloud, YouTube, Drive)
+                Demo / Sample Performance Link (SoundCloud, YouTube, Drive){" "}
+                <span className="normal-case font-medium text-gray-500">(optional)</span>
               </label>
               <div className="relative">
                 <Disc className="absolute left-4 top-3.5 text-gray-500" size={16} />
