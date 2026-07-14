@@ -268,3 +268,41 @@ export async function sendMembershipRejectedEmail(
     console.error("Failed to send membership-rejected email:", err);
   }
 }
+
+export async function sendEventRegistrationRejectedEmail(
+  to: string,
+  holderName: string,
+  note?: string | null
+) {
+  try {
+    const { error } = await resend.emails.send({
+      from: "The Benaras Beats <tickets@thebenarasbeats.com>",
+      to,
+      subject: "Update on your event registration request",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #0B0C10; color: #ffffff; padding: 32px; border-radius: 16px;">
+          <div style="background: #f59e0b; padding: 16px 24px; border-radius: 12px 12px 0 0; margin: -32px -32px 24px -32px;">
+            <h2 style="margin: 0; color: #000000; font-size: 18px;">THE BENARAS BEATS</h2>
+          </div>
+
+          <h1 style="font-size: 20px; margin-bottom: 8px;">Hi ${holderName},</h1>
+          <p style="color: #9ca3af; font-size: 14px; margin-bottom: 16px; line-height: 1.6;">
+            We were unable to verify your recent event registration request.
+            ${note ? `<br/><br/><strong style="color:#f59e0b;">Note from our team:</strong> ${note}` : ""}
+          </p>
+          <p style="color: #9ca3af; font-size: 14px; line-height: 1.6;">
+            If you believe this was a mistake, or if you'd like to resubmit
+            with a clearer payment screenshot, please reach out to us at
+            thebenarasbeats@gmail.com.
+          </p>
+        </div>
+      `,
+    });
+
+    if (error) {
+      console.error("Resend event rejection email error:", error);
+    }
+  } catch (err) {
+    console.error("Failed to send event rejection email:", err);
+  }
+}

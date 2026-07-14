@@ -17,6 +17,7 @@ import {
   Bell,
   MessageCircle,
   FileCheck,
+  Ticket,
 } from "lucide-react";
 
 const adminLinks = [
@@ -34,6 +35,7 @@ const adminLinks = [
   { name: "Music Genres", href: "/admin/genres", icon: Music },
   { name: "Waitlist", href: "/admin/membership-waitlist", icon: Bell },
   { name: "Feedback", href: "/admin/feedback", icon: MessageCircle },
+  { name: "Event Requests", href: "/admin/event-registration-requests", icon: Ticket },
 ];
 
 export default function AdminLayout({

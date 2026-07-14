@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { Loader2, Plus, X } from "lucide-react";
+import { Loader2, Plus, X, Trash2 } from "lucide-react";
 
 interface Membership {
   id: string;
@@ -25,6 +25,7 @@ export default function AdminMembershipsPage() {
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [addName, setAddName] = useState("");
@@ -69,7 +70,6 @@ export default function AdminMembershipsPage() {
   const isExpired = (dateStr: string | null) =>
     dateStr ? new Date(dateStr) < new Date() : false;
 
-  // 6 months from a given start date, for the live preview in the modal
   const previewExpiry = (() => {
     const d = new Date(addStartDate || todayISO());
     d.setMonth(d.getMonth() + 6);
@@ -119,6 +119,28 @@ export default function AdminMembershipsPage() {
     }
   };
 
+  const handleDelete = async (id: string, name: string) => {
+    if (!user) return;
+    if (!confirm(`Delete ${name}'s membership? This cannot be undone.`)) return;
+
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/admin/memberships/${id}?userId=${user.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to delete membership");
+        return;
+      }
+      setMemberships((prev) => prev.filter((m) => m.id !== id));
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div>
       <div className="flex items-start justify-between flex-wrap gap-4">
@@ -163,6 +185,7 @@ export default function AdminMembershipsPage() {
                 <th className="p-3 font-medium">Amount</th>
                 <th className="p-3 font-medium">Source</th>
                 <th className="p-3 font-medium">Purchased At</th>
+                <th className="p-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -189,6 +212,19 @@ export default function AdminMembershipsPage() {
                     <td className="p-3 text-gray-400">₹{m.amount}</td>
                     <td className="p-3 text-gray-500 text-xs capitalize">{(m.source ?? "razorpay").replace(/_/g, " ")}</td>
                     <td className="p-3 text-gray-500">{formatDateTime(m.created_at)}</td>
+                    <td className="p-3 text-right">
+                      <button
+                        onClick={() => handleDelete(m.id, m.holder_name)}
+                        disabled={deletingId === m.id}
+                        className="rounded-lg border border-white/10 p-2 text-gray-300 hover:border-red-500/40 hover:text-red-400 transition disabled:opacity-50"
+                      >
+                        {deletingId === m.id ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={14} />
+                        )}
+                      </button>
+                    </td>
                   </tr>
                 );
               })}

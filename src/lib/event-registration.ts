@@ -9,6 +9,11 @@ interface RegisterParams {
   claimedByMember: boolean;
 }
 
+type RegisterResult = {
+  success: true;
+  ticketId: string;
+};
+
 export async function registerUserForEvent({
   eventId,
   userId,
@@ -16,8 +21,8 @@ export async function registerUserForEvent({
   paymentId,
   amountPaid,
   claimedByMember,
-}: RegisterParams) {
-  const { error } = await supabaseAdmin.rpc("register_user_for_event", {
+}: RegisterParams): Promise<RegisterResult> {
+  const { data, error } = await supabaseAdmin.rpc("register_user_for_event", {
     p_event_id: eventId,
     p_user_id: userId,
     p_order_id: orderId,
@@ -32,5 +37,6 @@ export async function registerUserForEvent({
 
   return {
     success: true,
+    ticketId: data.ticketId,
   };
 }
