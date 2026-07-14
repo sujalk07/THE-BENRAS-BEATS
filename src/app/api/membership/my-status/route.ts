@@ -1,0 +1,56 @@
+import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+
+    if (!userId) {
+      return NextResponse.json({ error: "userId is required." }, { status: 400 });
+    }
+
+    // Check for an active membership first
+    const { data: membership } = await supabaseAdmin
+      .from("memberships")
+      .select("id, status, starts_at, expires_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (membership && membership.status === "active") {
+      const expired = membership.expires_at ? new Date(membership.expires_at) < new Date() : false;
+      if (!expired) {
+        return NextResponse.json({
+          status: "active",
+          startsAt: membership.starts_at,
+          expiresAt: membership.expires_at,
+        });
+      }
+    }
+
+    // Otherwise check the latest membership request
+    const { data: request } = await supabaseAdmin
+      .from("membership_requests")
+      .select("id, status, created_at, admin_note")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (request) {
+      return NextResponse.json({
+        status: request.status, // 'pending' | 'verified' | 'rejected'
+        requestId: request.id,
+        submittedAt: request.created_at,
+        adminNote: request.admin_note,
+      });
+    }
+
+    return NextResponse.json({ status: "none" });
+  } catch (err: any) {
+    console.error(err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}

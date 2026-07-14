@@ -2,10 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 import Script from "next/script";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { Check, Music, Sparkles, ArrowLeft, Loader2, X, Bell, Mail } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import {
+  Check,
+  Music,
+  Sparkles,
+  ArrowLeft,
+  Loader2,
+  X,
+  UploadCloud,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  LogIn,
+} from "lucide-react";
 import { Cormorant_Garamond } from "next/font/google";
 
 const cormorant = Cormorant_Garamond({
@@ -13,8 +27,11 @@ const cormorant = Cormorant_Garamond({
   weight: ["400", "600", "700"],
 });
 
-// Toggle this to false once Razorpay live mode is approved and ready
+// Toggle this to true once Razorpay live mode is approved and ready
 const MEMBERSHIPS_ENABLED = false;
+
+// Amount for the manual QR-payment flow (shown while MEMBERSHIPS_ENABLED is false)
+const QR_MEMBERSHIP_AMOUNT = 4999;
 
 const tiers = [
   {
@@ -60,6 +77,14 @@ const MEMBERSHIP_RULES = [
   "Members must carry valid ID matching their registered account when attending events.",
 ];
 
+// Status of the current user's manual QR-payment submission / membership
+type MyStatus =
+  | { status: "loading" }
+  | { status: "none" }
+  | { status: "pending"; submittedAt?: string }
+  | { status: "active"; startsAt?: string; expiresAt?: string }
+  | { status: "rejected"; adminNote?: string | null };
+
 export default function MembershipPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -74,13 +99,18 @@ export default function MembershipPage() {
   const [pendingPlan, setPendingPlan] = useState<"intro" | "regular" | null>(null);
   const [agreedToRules, setAgreedToRules] = useState(false);
 
-  // Waitlist form state
-  const [waitlistEmail, setWaitlistEmail] = useState(user?.email ?? "");
-  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
-  const [waitlistSuccess, setWaitlistSuccess] = useState<string | null>(null);
+  // ---- QR-payment manual flow state (replaces the old waitlist state) ----
+  const [myStatus, setMyStatus] = useState<MyStatus>({ status: "loading" });
+  const [fullName, setFullName] = useState("");
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [qrSubmitting, setQrSubmitting] = useState(false);
+  const [qrFormError, setQrFormError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user?.email) setWaitlistEmail(user.email);
+    if (user?.user_metadata?.full_name) {
+      setFullName(user.user_metadata.full_name);
+    }
   }, [user]);
 
   useEffect(() => {
@@ -98,32 +128,75 @@ export default function MembershipPage() {
       .finally(() => setPageLoading(false));
   }, []);
 
-  const handleWaitlistSubmit = async () => {
-    if (!waitlistEmail) {
-      alert("Please enter your email.");
+  // Fetch the current user's QR-payment request / membership status
+  useEffect(() => {
+    if (MEMBERSHIPS_ENABLED) return; // only needed while the manual flow is active
+    if (!user) {
+      setMyStatus({ status: "none" });
+      return;
+    }
+    fetch(`/api/membership/my-status?userId=${user.id}`)
+      .then((res) => res.json())
+      .then((data) => setMyStatus(data))
+      .catch(() => setMyStatus({ status: "none" }));
+  }, [user]);
+
+  const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setScreenshotFile(file);
+    setScreenshotPreview(URL.createObjectURL(file));
+  };
+
+  const handleQrSubmit = async () => {
+    if (!user) return;
+    setQrFormError(null);
+
+    if (!fullName.trim()) {
+      setQrFormError("Please enter your full name.");
+      return;
+    }
+    if (!screenshotFile) {
+      setQrFormError("Please upload a screenshot of your payment.");
       return;
     }
 
-    setWaitlistSubmitting(true);
-    setWaitlistSuccess(null);
+    setQrSubmitting(true);
     try {
-      const res = await fetch("/api/membership-waitlist", {
+      const fileExt = screenshotFile.name.split(".").pop();
+      const path = `${user.id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("payment-screenshots")
+        .upload(path, screenshotFile);
+
+      if (uploadError) {
+        throw new Error("Failed to upload screenshot. Please try again.");
+      }
+
+      const res = await fetch("/api/membership/submit-request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: waitlistEmail }),
+        body: JSON.stringify({
+          userId: user.id,
+          fullName: fullName.trim(),
+          screenshotPath: path,
+        }),
       });
+
       const data = await res.json();
-      if (!res.ok) {
-        alert(data.error || "Something went wrong.");
-        return;
-      }
-      setWaitlistSuccess(data.message);
+      if (!res.ok) throw new Error(data.error || "Failed to submit request.");
+
+      setMyStatus({ status: "pending", submittedAt: new Date().toISOString() });
     } catch (err: any) {
-      alert(err.message);
+      setQrFormError(err.message);
     } finally {
-      setWaitlistSubmitting(false);
+      setQrSubmitting(false);
     }
   };
+
+  const formatDate = (d?: string) =>
+    d ? new Date(d).toLocaleDateString("en-IN", { dateStyle: "long" }) : "—";
 
   const handleSubscribeClick = (plan: "intro" | "regular") => {
     if (plan === "intro" && soldOut) {
@@ -241,12 +314,13 @@ export default function MembershipPage() {
   }
 
   // ============================================================
-  // MEMBERSHIPS DISABLED — show waitlist form instead
+  // MEMBERSHIPS DISABLED — show QR-code + payment-proof form instead
+  // (this replaces the old "notify me" waitlist)
   // ============================================================
   if (!MEMBERSHIPS_ENABLED) {
     return (
       <div className="min-h-screen bg-[#0B0C10] px-4 py-6">
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto max-w-lg">
           <button
             type="button"
             onClick={() => router.push("/")}
@@ -256,60 +330,156 @@ export default function MembershipPage() {
             Back to Home
           </button>
 
-          <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-8 sm:p-12 text-center">
-            <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400">
-              <Bell size={26} />
+          <h1 className={`${cormorant.className} text-3xl sm:text-4xl font-bold text-white mb-2`}>
+            Become a Member
+          </h1>
+          <p className="text-sm text-gray-400 mb-8">
+            ₹{QR_MEMBERSHIP_AMOUNT.toLocaleString("en-IN")} for 6 months of priority access, member
+            community, and exclusive experiences.
+          </p>
+
+          {/* Signed out */}
+          {!user && myStatus.status === "none" && (
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-8 text-center">
+              <LogIn className="mx-auto mb-4 text-amber-400" size={28} />
+              <p className="text-gray-300 mb-5">Please sign in to apply for membership.</p>
+              <button
+                onClick={() => router.push("/login?redirect=/membership")}
+                className="rounded-xl bg-amber-500 px-6 py-3 text-sm font-bold text-black hover:bg-amber-400 transition"
+              >
+                Sign In
+              </button>
             </div>
+          )}
 
-            <h1
-              className={`${cormorant.className} text-3xl sm:text-4xl font-bold text-white mb-3`}
-            >
-              Memberships Are Coming Soon
-            </h1>
-            <p className="text-sm sm:text-base text-gray-400 max-w-md mx-auto leading-relaxed">
-              Membership purchases are temporarily unavailable while we
-              finish setting things up. Leave your email below and we'll
-              notify you the moment it opens.
-            </p>
+          {myStatus.status === "loading" && (
+            <div className="flex items-center gap-2 text-gray-500">
+              <Loader2 size={16} className="animate-spin" /> Checking your status...
+            </div>
+          )}
 
-            {waitlistSuccess ? (
-              <div className="mt-8 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-400">
-                {waitlistSuccess}
-              </div>
-            ) : (
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center">
-                <div className="relative flex-1 max-w-xs">
-                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
-                  <input
-                    type="email"
-                    placeholder="you@example.com"
-                    value={waitlistEmail}
-                    onChange={(e) => setWaitlistEmail(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:border-amber-500 focus:outline-none"
+          {/* Active member */}
+          {user && myStatus.status === "active" && (
+            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-8 text-center">
+              <CheckCircle2 className="mx-auto mb-4 text-emerald-400" size={28} />
+              <p className="text-lg font-semibold text-white mb-1">You're a member!</p>
+              <p className="text-sm text-gray-300">
+                Valid until <span className="text-emerald-400 font-medium">{formatDate(myStatus.expiresAt)}</span>
+              </p>
+            </div>
+          )}
+
+          {/* Pending review */}
+          {user && myStatus.status === "pending" && (
+            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-8 text-center">
+              <Clock className="mx-auto mb-4 text-amber-400" size={28} />
+              <p className="text-lg font-semibold text-white mb-1">Under review</p>
+              <p className="text-sm text-gray-300">
+                We've received your payment submission and will verify it shortly. You'll get an
+                email once it's confirmed.
+              </p>
+            </div>
+          )}
+
+          {/* Rejected — show reason, form reappears below to resubmit */}
+          {user && myStatus.status === "rejected" && (
+            <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300 flex items-start gap-2">
+              <XCircle size={16} className="mt-0.5 shrink-0" />
+              <span>
+                We couldn't verify your previous submission
+                {myStatus.adminNote ? `: ${myStatus.adminNote}` : "."} Please try again below.
+              </span>
+            </div>
+          )}
+
+          {/* Form — shown when signed in and not active/pending */}
+          {user && (myStatus.status === "none" || myStatus.status === "rejected") && (
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 sm:p-8">
+              <div className="text-center mb-6">
+                <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3">
+                  Step 1 — Scan &amp; Pay
+                </p>
+                <div className="mx-auto w-48 h-48 rounded-xl overflow-hidden border border-white/10 bg-white p-2">
+                  {/* Replace /assets/payment-qr.png with your actual QR code image */}
+                  <Image
+                    src="/assets/payment-qr.png"
+                    alt="Payment QR Code"
+                    width={192}
+                    height={192}
+                    className="w-full h-full object-contain"
                   />
                 </div>
-                <button
-                  onClick={handleWaitlistSubmit}
-                  disabled={waitlistSubmitting}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-6 py-3 text-sm font-bold text-black transition hover:bg-amber-400 disabled:opacity-50"
+                <p className="mt-3 text-sm text-gray-400">
+                  Scan and pay{" "}
+                  <span className="text-amber-400 font-semibold">₹{QR_MEMBERSHIP_AMOUNT}</span>
+                </p>
+              </div>
+
+              <div className="border-t border-white/10 pt-6">
+                <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-4">
+                  Step 2 — Submit Your Details
+                </p>
+
+                <label className="block text-sm text-gray-300 mb-1.5">Full Name</label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Your full name"
+                  className="w-full mb-4 rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-white placeholder-gray-500 focus:border-amber-500 focus:outline-none"
+                />
+
+                <label className="block text-sm text-gray-300 mb-1.5">Payment Screenshot</label>
+                <label
+                  htmlFor="screenshot-upload"
+                  className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 bg-white/[0.02] p-6 text-sm text-gray-400 cursor-pointer hover:border-amber-500/50 transition"
                 >
-                  {waitlistSubmitting ? (
-                    <Loader2 size={15} className="animate-spin" />
+                  {screenshotPreview ? (
+                    <img
+                      src={screenshotPreview}
+                      alt="Payment screenshot preview"
+                      className="max-h-48 rounded-lg object-contain"
+                    />
                   ) : (
-                    <Bell size={15} />
+                    <>
+                      <UploadCloud size={22} className="text-gray-500" />
+                      Tap to upload screenshot
+                    </>
                   )}
-                  Notify Me
+                </label>
+                <input
+                  id="screenshot-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleScreenshotChange}
+                  className="hidden"
+                />
+
+                {qrFormError && <p className="mt-3 text-sm text-red-400">{qrFormError}</p>}
+
+                <button
+                  onClick={handleQrSubmit}
+                  disabled={qrSubmitting}
+                  className="mt-6 w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-sm font-bold text-black hover:bg-amber-400 transition disabled:opacity-50"
+                >
+                  {qrSubmitting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" /> Submitting...
+                    </>
+                  ) : (
+                    "Submit for Verification"
+                  )}
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
   // ============================================================
-  // MEMBERSHIPS ENABLED — normal purchase flow (unchanged)
+  // MEMBERSHIPS ENABLED — normal Razorpay purchase flow (unchanged)
   // ============================================================
   return (
     <>

@@ -15,7 +15,9 @@ export async function GET(req: NextRequest) {
 
     const { data: memberships, error } = await supabaseAdmin
       .from("memberships")
-      .select("id, user_id, plan_name, status, starts_at, expires_at, amount, created_at")
+      .select(
+        "id, user_id, plan_name, status, starts_at, expires_at, amount, created_at, source, manual_name, manual_email"
+      )
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -27,7 +29,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ memberships: [] });
     }
 
-    const userIds = [...new Set(memberships.map((m) => m.user_id))];
+    const userIds = [...new Set(memberships.map((m) => m.user_id).filter(Boolean))];
     const [{ data: profiles }, allAuthUsers] = await Promise.all([
       supabaseAdmin.from("profiles").select("id, full_name").in("id", userIds),
       getAllAuthUsers(),
@@ -38,14 +40,16 @@ export async function GET(req: NextRequest) {
 
     const result = memberships.map((m) => ({
       id: m.id,
-      holder_name: profilesMap.get(m.user_id)?.full_name ?? "Unknown",
-      holder_email: emailMap.get(m.user_id) ?? "—",
+      // Fall back to manually-entered name/email when there's no linked account
+      holder_name: m.user_id ? profilesMap.get(m.user_id)?.full_name ?? "Unknown" : m.manual_name ?? "Unknown",
+      holder_email: m.user_id ? emailMap.get(m.user_id) ?? "—" : m.manual_email ?? "—",
       plan_name: m.plan_name,
       status: m.status,
       starts_at: m.starts_at,
       expires_at: m.expires_at,
       amount: m.amount,
       created_at: m.created_at,
+      source: m.source ?? "razorpay",
     }));
 
     return NextResponse.json({ memberships: result });

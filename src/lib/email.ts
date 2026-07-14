@@ -171,3 +171,100 @@ export async function sendMembershipCertificateEmail(
     console.error("Failed to send certificate email:", err);
   }
 }
+
+// ============================================================
+// ADD THESE TWO FUNCTIONS TO YOUR EXISTING lib/email.ts
+// (uses the same `resend` instance already defined at the top of that file)
+// ============================================================
+
+export async function sendMembershipVerifiedEmail(
+  to: string,
+  memberName: string,
+  startDate: string,
+  expiryDate: string
+) {
+  const formattedStart = new Date(startDate).toLocaleDateString("en-IN", { dateStyle: "long" });
+  const formattedExpiry = new Date(expiryDate).toLocaleDateString("en-IN", { dateStyle: "long" });
+
+  try {
+    const { error } = await resend.emails.send({
+      from: "The Benaras Beats <tickets@thebenarasbeats.com>",
+      to,
+      subject: "✅ Your membership is confirmed — The Benaras Beats",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #0B0C10; color: #ffffff; padding: 32px; border-radius: 16px;">
+          <div style="background: #f59e0b; padding: 16px 24px; border-radius: 12px 12px 0 0; margin: -32px -32px 24px -32px;">
+            <h2 style="margin: 0; color: #000000; font-size: 18px;">THE BENARAS BEATS</h2>
+          </div>
+
+          <h1 style="font-size: 22px; margin-bottom: 8px;">You're a member now, ${memberName}! 🎉</h1>
+          <p style="color: #9ca3af; font-size: 14px; margin-bottom: 24px; line-height: 1.6;">
+            We've verified your payment and activated your membership. Welcome to the community!
+          </p>
+
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+            <tr>
+              <td style="padding: 8px 0; color: #9ca3af; font-size: 12px; text-transform: uppercase;">Valid From</td>
+              <td style="padding: 8px 0; text-align: right; font-weight: 600;">${formattedStart}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #9ca3af; font-size: 12px; text-transform: uppercase;">Valid Until</td>
+              <td style="padding: 8px 0; text-align: right; font-weight: 600;">${formattedExpiry}</td>
+            </tr>
+          </table>
+
+          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/dashboard" style="display: block; text-align: center; background: #f59e0b; color: #000000; font-weight: bold; padding: 14px; border-radius: 10px; text-decoration: none; font-size: 14px;">
+            View Your Dashboard
+          </a>
+
+          <p style="color: #6b7280; font-size: 11px; margin-top: 24px; text-align: center;">
+            Music for Mind & Soul
+          </p>
+        </div>
+      `,
+    });
+
+    if (error) console.error("Resend membership-verified email error:", error);
+  } catch (err) {
+    console.error("Failed to send membership-verified email:", err);
+  }
+}
+
+export async function sendMembershipRejectedEmail(
+  to: string,
+  memberName: string,
+  reason?: string
+) {
+  try {
+    const { error } = await resend.emails.send({
+      from: "The Benaras Beats <tickets@thebenarasbeats.com>",
+      to,
+      subject: "Regarding your membership request — The Benaras Beats",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #0B0C10; color: #ffffff; padding: 32px; border-radius: 16px;">
+          <div style="background: #f59e0b; padding: 16px 24px; border-radius: 12px 12px 0 0; margin: -32px -32px 24px -32px;">
+            <h2 style="margin: 0; color: #000000; font-size: 18px;">THE BENARAS BEATS</h2>
+          </div>
+
+          <h1 style="font-size: 20px; margin-bottom: 8px;">Hi ${memberName},</h1>
+          <p style="color: #9ca3af; font-size: 14px; margin-bottom: 16px; line-height: 1.6;">
+            We weren't able to verify your recent membership payment submission.
+            ${reason ? `Reason: <span style="color:#f59e0b;">${reason}</span>` : ""}
+          </p>
+          <p style="color: #9ca3af; font-size: 14px; margin-bottom: 24px; line-height: 1.6;">
+            Please double-check your payment and resubmit the form with a clear
+            screenshot, or reach out to us directly if you believe this is a mistake.
+          </p>
+
+          <a href="mailto:tickets@thebenarasbeats.com" style="display: block; text-align: center; background: #f59e0b; color: #000000; font-weight: bold; padding: 14px; border-radius: 10px; text-decoration: none; font-size: 14px;">
+            Contact Support
+          </a>
+        </div>
+      `,
+    });
+
+    if (error) console.error("Resend membership-rejected email error:", error);
+  } catch (err) {
+    console.error("Failed to send membership-rejected email:", err);
+  }
+}

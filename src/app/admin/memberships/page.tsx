@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, X } from "lucide-react";
 
 interface Membership {
   id: string;
@@ -15,7 +15,10 @@ interface Membership {
   expires_at: string | null;
   amount: number;
   created_at: string;
+  source: string;
 }
+
+const todayISO = () => new Date().toISOString().slice(0, 10);
 
 export default function AdminMembershipsPage() {
   const { user } = useAuth();
@@ -23,20 +26,30 @@ export default function AdminMembershipsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    async function fetchMemberships() {
-      if (!user) return;
-      try {
-        const res = await fetch(`/api/admin/memberships?userId=${user.id}`);
-        const data = await res.json();
-        if (res.ok) setMemberships(data.memberships ?? []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addName, setAddName] = useState("");
+  const [addEmail, setAddEmail] = useState("");
+  const [addAmount, setAddAmount] = useState("4999");
+  const [addStartDate, setAddStartDate] = useState(todayISO());
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+
+  const fetchMemberships = async () => {
+    if (!user) return;
+    try {
+      const res = await fetch(`/api/admin/memberships?userId=${user.id}`);
+      const data = await res.json();
+      if (res.ok) setMemberships(data.memberships ?? []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchMemberships();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const filtered = memberships.filter(
@@ -56,10 +69,71 @@ export default function AdminMembershipsPage() {
   const isExpired = (dateStr: string | null) =>
     dateStr ? new Date(dateStr) < new Date() : false;
 
+  // 6 months from a given start date, for the live preview in the modal
+  const previewExpiry = (() => {
+    const d = new Date(addStartDate || todayISO());
+    d.setMonth(d.getMonth() + 6);
+    return d.toLocaleDateString("en-IN", { dateStyle: "medium" });
+  })();
+
+  const resetAddForm = () => {
+    setAddName("");
+    setAddEmail("");
+    setAddAmount("4999");
+    setAddStartDate(todayISO());
+    setAddError(null);
+  };
+
+  const handleAddMember = async () => {
+    if (!user) return;
+    setAddError(null);
+
+    if (!addName.trim() || !addEmail.trim()) {
+      setAddError("Name and email are required.");
+      return;
+    }
+
+    setAdding(true);
+    try {
+      const res = await fetch("/api/admin/memberships/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          name: addName.trim(),
+          email: addEmail.trim(),
+          amount: Number(addAmount) || 4999,
+          startDate: addStartDate,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to add member.");
+
+      setShowAddModal(false);
+      resetAddForm();
+      await fetchMemberships();
+    } catch (err: any) {
+      setAddError(err.message);
+    } finally {
+      setAdding(false);
+    }
+  };
+
   return (
     <div>
-      <h1 className="text-3xl font-bold">Memberships</h1>
-      <p className="mt-2 text-gray-400">All member accounts and their plan status.</p>
+      <div className="flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Memberships</h1>
+          <p className="mt-2 text-gray-400">All member accounts and their plan status.</p>
+        </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-black hover:bg-amber-400 transition"
+        >
+          <Plus size={16} />
+          Add Member
+        </button>
+      </div>
 
       <input
         type="text"
@@ -87,6 +161,7 @@ export default function AdminMembershipsPage() {
                 <th className="p-3 font-medium">Start</th>
                 <th className="p-3 font-medium">Expiry</th>
                 <th className="p-3 font-medium">Amount</th>
+                <th className="p-3 font-medium">Source</th>
                 <th className="p-3 font-medium">Purchased At</th>
               </tr>
             </thead>
@@ -112,12 +187,97 @@ export default function AdminMembershipsPage() {
                     <td className="p-3 text-gray-400">{formatDate(m.starts_at)}</td>
                     <td className="p-3 text-gray-400">{formatDate(m.expires_at)}</td>
                     <td className="p-3 text-gray-400">₹{m.amount}</td>
+                    <td className="p-3 text-gray-500 text-xs capitalize">{(m.source ?? "razorpay").replace(/_/g, " ")}</td>
                     <td className="p-3 text-gray-500">{formatDateTime(m.created_at)}</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Add Member Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1f232d] p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-white">Add Member Manually</h2>
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  resetAddForm();
+                }}
+                className="text-gray-500 hover:text-white transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <label className="block text-sm text-gray-300 mb-1.5">Name</label>
+            <input
+              type="text"
+              value={addName}
+              onChange={(e) => setAddName(e.target.value)}
+              placeholder="Full name"
+              className="w-full mb-4 rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder-gray-500 focus:border-amber-500 focus:outline-none"
+            />
+
+            <label className="block text-sm text-gray-300 mb-1.5">Email</label>
+            <input
+              type="email"
+              value={addEmail}
+              onChange={(e) => setAddEmail(e.target.value)}
+              placeholder="member@example.com"
+              className="w-full mb-4 rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder-gray-500 focus:border-amber-500 focus:outline-none"
+            />
+
+            <div className="grid grid-cols-2 gap-3 mb-1">
+              <div>
+                <label className="block text-sm text-gray-300 mb-1.5">Amount (₹)</label>
+                <input
+                  type="number"
+                  value={addAmount}
+                  onChange={(e) => setAddAmount(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white focus:border-amber-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-300 mb-1.5">Start Date</label>
+                <input
+                  type="date"
+                  value={addStartDate}
+                  onChange={(e) => setAddStartDate(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white focus:border-amber-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <p className="mt-3 mb-2 text-xs text-gray-500">
+              Membership will expire on <span className="text-amber-400 font-medium">{previewExpiry}</span> (6 months from start date).
+            </p>
+
+            {addError && <p className="mb-3 text-sm text-red-400">{addError}</p>}
+
+            <div className="mt-4 flex gap-3">
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  resetAddForm();
+                }}
+                className="flex-1 rounded-xl border border-white/10 py-3 text-sm font-semibold text-gray-300 hover:bg-white/5 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddMember}
+                disabled={adding}
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-sm font-bold text-black hover:bg-amber-400 transition disabled:opacity-50"
+              >
+                {adding ? <Loader2 size={16} className="animate-spin" /> : "Add Member"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
