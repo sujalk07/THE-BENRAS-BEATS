@@ -33,7 +33,10 @@ export default function AdminEventRegistrationRequestsPage() {
   const fetchRequests = async () => {
     if (!user) return;
     try {
-      const res = await fetch(`/api/admin/event-registration-requests?userId=${user.id}`);
+      // cache: "no-store" ensures we never get a stale cached response for this GET
+      const res = await fetch(`/api/admin/event-registration-requests?userId=${user.id}`, {
+        cache: "no-store",
+      });
       const data = await res.json();
       if (res.ok) setRequests(data.requests ?? []);
     } catch (err) {
@@ -59,9 +62,17 @@ export default function AdminEventRegistrationRequestsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+
+      // Optimistic local update — the card reflects the new status immediately,
+      // regardless of any lag/caching on the follow-up refetch.
+      setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status: "verified" } : r)));
+
       await fetchRequests();
     } catch (err: any) {
       alert(err.message);
+      // Something went wrong server-side — re-sync with the DB so we don't
+      // show a false "verified" state.
+      await fetchRequests();
     } finally {
       setActioningId(null);
     }
@@ -78,11 +89,15 @@ export default function AdminEventRegistrationRequestsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+
+      setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status: "rejected" } : r)));
       setRejectingId(null);
       setRejectNote("");
+
       await fetchRequests();
     } catch (err: any) {
       alert(err.message);
+      await fetchRequests();
     } finally {
       setActioningId(null);
     }

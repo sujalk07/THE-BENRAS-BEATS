@@ -3,7 +3,10 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { verifyAdmin } from "@/lib/admin-api";
 import { getAllAuthUsers } from "@/lib/get-all-auth-users";
 import { registerUserForEvent } from "@/lib/event-registration";
-import { sendTicketConfirmationEmail, sendEventRegistrationRejectedEmail } from "@/lib/email";
+import {
+  sendTicketConfirmationEmail,
+  sendEventRegistrationRejectedEmail,
+} from "@/lib/email";
 
 export async function PATCH(
   req: NextRequest,
@@ -32,7 +35,10 @@ export async function PATCH(
     }
 
     if (request.status !== "pending") {
-      return NextResponse.json({ error: `Request already ${request.status}.` }, { status: 409 });
+      return NextResponse.json(
+        { error: `Request already ${request.status}.` },
+        { status: 409 }
+      );
     }
 
     const allAuthUsers = await getAllAuthUsers();
@@ -50,14 +56,18 @@ export async function PATCH(
         .eq("id", id);
 
       if (requesterEmail) {
-        await sendEventRegistrationRejectedEmail(requesterEmail, request.full_name, note);
+        await sendEventRegistrationRejectedEmail(
+          requesterEmail,
+          request.full_name,
+          note
+        );
       }
 
       return NextResponse.json({ success: true, status: "rejected" });
     }
 
-    // action === "verify" — create the actual ticket via the same RPC used by Razorpay flow
-    let ticketId: string;
+    let ticketId: string | null = null;
+
     try {
       const result = await registerUserForEvent({
         eventId: request.event_id,
@@ -67,11 +77,19 @@ export async function PATCH(
         amountPaid: request.amount,
         claimedByMember: false,
       });
+
       ticketId = result.ticketId;
     } catch (regErr: any) {
       console.error("Error registering user for event on verify:", regErr);
       return NextResponse.json(
         { error: regErr.message || "Failed to register user for the event." },
+        { status: 500 }
+      );
+    }
+
+    if (!ticketId) {
+      return NextResponse.json(
+        { error: "Ticket was created but ticket id could not be resolved." },
         { status: 500 }
       );
     }
@@ -86,7 +104,6 @@ export async function PATCH(
       })
       .eq("id", id);
 
-    // Send the ticket confirmation email — same one used by the Razorpay flow
     if (requesterEmail) {
       const { data: event } = await supabaseAdmin
         .from("events")

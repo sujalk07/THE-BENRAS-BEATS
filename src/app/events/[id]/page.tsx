@@ -3,11 +3,10 @@
 import { useEffect, useState, use } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useRouter } from "next/navigation";
-import { Calendar, MapPin, CheckCircle, Users, ChevronLeft, Star, Music, X, Clock3, Upload, Loader2 } from "lucide-react";
+import { Calendar, MapPin, CheckCircle, Users, ChevronLeft, Star, Music, X, Clock, XCircle, Loader2, Upload } from "lucide-react";
 import Link from "next/link";
 import Script from "next/script";
-import Image from "next/image";
-import paymentQr from "@/assets/payment-qr.png";
+import qrImg from "../../../assets/payment-qr.png";
 
 interface Artist {
   id: string;
@@ -35,13 +34,6 @@ interface EventDetails {
   artists?: Artist[];
 }
 
-interface RegistrationRequestStatus {
-  id: string;
-  status: "pending" | "verified" | "rejected";
-  admin_note: string | null;
-  created_at: string;
-}
-
 const TICKET_RULES = [
   "Tickets are non-transferable and valid only for the registered attendee.",
   "Entry may be denied without a valid ticket / QR code shown at the venue.",
@@ -51,8 +43,8 @@ const TICKET_RULES = [
   "Any misconduct at the venue may result in removal without refund.",
 ];
 
-// Flip this to true once Razorpay is re-approved and ready to use again for events
-const RAZORPAY_ENABLED_FOR_EVENTS = false;
+// Toggle this to true once Razorpay is re-enabled — the entire Razorpay flow below is untouched and ready to go
+const EVENT_PAYMENTS_LIVE = false;
 
 export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -66,13 +58,15 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
   const [agreedToRules, setAgreedToRules] = useState(false);
 
   // Manual QR verification flow state
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [manualName, setManualName] = useState(user?.user_metadata?.full_name ?? "");
-  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
-  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [registrationRequest, setRegistrationRequest] = useState<RegistrationRequestStatus | null>(null);
-  const [statusLoading, setStatusLoading] = useState(true);
+  const [registrationRequestStatus, setRegistrationRequestStatus] = useState<
+  "pending" | "verified" | "rejected" | null
+>(null);
+  const [registrationRequestNote, setRegistrationRequestNote] = useState<string | null>(null);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrFullName, setQrFullName] = useState("");
+  const [qrScreenshot, setQrScreenshot] = useState<File | null>(null);
+  const [qrScreenshotPreview, setQrScreenshotPreview] = useState<string | null>(null);
+  const [qrSubmitting, setQrSubmitting] = useState(false);
 
   const fetchEventDetails = async () => {
     try {
@@ -107,29 +101,40 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
     }
   };
 
-  const fetchRegistrationStatus = async () => {
-    if (!user) {
-      setStatusLoading(false);
-      return;
-    }
+  const fetchRegistrationRequestStatus = async () => {
+    if (!user) return;
     try {
       const res = await fetch(`/api/events/my-registration-status?userId=${user.id}&eventId=${id}`);
       const data = await res.json();
-      if (res.ok) setRegistrationRequest(data.request ?? null);
+      if (res.ok && data.request) {
+        setRegistrationRequestStatus(data.request.status);
+        setRegistrationRequestNote(data.request.admin_note ?? null);
+      } else {
+        setRegistrationRequestStatus(null);
+        setRegistrationRequestNote(null);
+      }
     } catch (err) {
       console.error(err);
-    } finally {
-      setStatusLoading(false);
     }
   };
 
   useEffect(() => {
     if (id) {
       fetchEventDetails();
-      fetchRegistrationStatus();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user]);
+
+  useEffect(() => {
+    if (id && user && !EVENT_PAYMENTS_LIVE) {
+      fetchRegistrationRequestStatus();
+    }
+  }, [id, user]);
+
+  useEffect(() => {
+    if (user?.user_metadata?.full_name) {
+      setQrFullName(user.user_metadata.full_name);
+    }
+  }, [user]);
 
   // Step 1: user clicks the ticket button — show rules modal first
   const handleTicketButtonClick = () => {
@@ -141,74 +146,25 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
     setShowRulesModal(true);
   };
 
-  // Step 2: user confirms agreement — proceed with free claim or open the payment modal
+  // Step 2: user confirms agreement — proceed with actual claim/purchase flow
   const handleConfirmRules = () => {
     if (!agreedToRules) return;
     setShowRulesModal(false);
 
+    // Members always get the free-claim flow regardless of payment mode
     if (event?.isMember) {
       handleRegister();
-    } else if (RAZORPAY_ENABLED_FOR_EVENTS) {
+      return;
+    }
+
+    // Non-members: route to Razorpay or the manual QR flow depending on the flag
+    if (EVENT_PAYMENTS_LIVE) {
       handleRegister();
     } else {
-      setManualName(user?.user_metadata?.full_name ?? "");
-      setScreenshotFile(null);
-      setScreenshotPreview(null);
-      setShowPaymentModal(true);
+      setShowQrModal(true);
     }
   };
 
-  const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setScreenshotFile(file);
-    setScreenshotPreview(URL.createObjectURL(file));
-  };
-
-  const handleSubmitPaymentProof = async () => {
-    if (!user || !event) return;
-
-    if (!manualName.trim()) {
-      alert("Please enter your full name.");
-      return;
-    }
-    if (!screenshotFile) {
-      alert("Please upload your payment screenshot.");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", screenshotFile);
-      formData.append("userId", user.id);
-      formData.append("eventId", id);
-      formData.append("fullName", manualName.trim());
-      formData.append("amount", String(event.ticket_price));
-
-      const res = await fetch("/api/events/submit-registration-request", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to submit your request.");
-      }
-
-      setShowPaymentModal(false);
-      alert("✅ Your payment proof has been submitted! We'll verify it and email your ticket shortly.");
-      fetchRegistrationStatus();
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // ===========================
-  // Original Razorpay flow — kept intact, currently unused while RAZORPAY_ENABLED_FOR_EVENTS is false
-  // ===========================
   const handleRegister = async () => {
     if (!user) {
       router.push(`/signup?redirectTo=/events/${id}`);
@@ -248,7 +204,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
     }
 
     // ===========================
-    // NON MEMBER → PAYMENT (Razorpay)
+    // NON MEMBER → PAYMENT (Razorpay — kept intact, only runs when EVENT_PAYMENTS_LIVE is true)
     // ===========================
 
     try {
@@ -336,23 +292,72 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
     }
   };
 
+  const handleQrScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setQrScreenshot(file);
+    setQrScreenshotPreview(URL.createObjectURL(file));
+  };
+
+  const handleQrSubmit = async () => {
+    if (!user || !event) return;
+
+    if (!qrFullName.trim()) {
+      alert("Please enter your full name.");
+      return;
+    }
+    if (!qrScreenshot) {
+      alert("Please upload your payment screenshot.");
+      return;
+    }
+
+    setQrSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", qrScreenshot);
+      formData.append("userId", user.id);
+      formData.append("eventId", event.id);
+      formData.append("fullName", qrFullName.trim());
+      formData.append("amount", String(event.ticket_price));
+
+      const res = await fetch("/api/events/submit-registration-request", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to submit your request.");
+      }
+
+      setShowQrModal(false);
+      setQrScreenshot(null);
+      setQrScreenshotPreview(null);
+      setRegistrationRequestStatus("pending");
+      alert("🎉 Your payment screenshot was submitted! We'll review and confirm your ticket shortly.");
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setQrSubmitting(false);
+    }
+  };
+
   if (loading) return <div className="text-center text-amber-500 mt-20 animate-pulse font-medium tracking-wide">Loading showcase information...</div>;
   if (!event) return <div className="text-center text-red-400 mt-20 font-medium">Showcase timeline could not be parsed.</div>;
 
-  const hasPendingRequest = registrationRequest?.status === "pending";
-  const wasRejected = registrationRequest?.status === "rejected";
+  const showingPendingRequest = !EVENT_PAYMENTS_LIVE && !event.isMember && registrationRequestStatus === "pending";
+  const showingRejectedRequest = !EVENT_PAYMENTS_LIVE && !event.isMember && registrationRequestStatus === "rejected";
 
   const buttonDisabled =
-    event.isUserRegistered || event.isSoldOut || !event.registration_open || hasPendingRequest || statusLoading;
+    event.isUserRegistered || event.isSoldOut || !event.registration_open || showingPendingRequest;
 
   return (
     <>
-      {RAZORPAY_ENABLED_FOR_EVENTS && (
-        <Script
-          src="https://checkout.razorpay.com/v1/checkout.js"
-          strategy="beforeInteractive"
-        />
-      )}
+      <Script
+        src="https://checkout.razorpay.com/v1/checkout.js"
+        strategy="beforeInteractive"
+      />
       <div className="max-w-4xl mx-auto px-4 py-12 selection:bg-amber-500 selection:text-black">
         {/* Back navigation */}
         <Link href="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-amber-500 transition-colors mb-6 text-sm font-medium">
@@ -442,18 +447,22 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
               )}
             </div>
 
-            {/* Pending / rejected banner */}
-            {hasPendingRequest && (
-              <div className="mb-4 flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
-                <Clock3 size={16} className="shrink-0" />
-                Your payment proof is under review. We'll email you once your ticket is confirmed.
+            {/* Pending/Rejected status banners */}
+            {showingPendingRequest && (
+              <div className="mb-6 flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+                <Clock size={18} className="text-amber-400 shrink-0" />
+                <p className="text-sm text-amber-300">
+                  Your payment screenshot has been submitted and is awaiting review. We'll email you once your ticket is confirmed.
+                </p>
               </div>
             )}
-            {wasRejected && !hasPendingRequest && (
-              <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                Your previous request couldn't be verified
-                {registrationRequest?.admin_note ? `: ${registrationRequest.admin_note}` : "."} You can try
-                submitting again below.
+            {showingRejectedRequest && (
+              <div className="mb-6 flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3">
+                <XCircle size={18} className="text-red-400 shrink-0" />
+                <p className="text-sm text-red-300">
+                  Your previous request couldn't be verified.
+                  {registrationRequestNote ? ` Note: ${registrationRequestNote}` : ""} Please try again with a clear screenshot.
+                </p>
               </div>
             )}
 
@@ -465,9 +474,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                 className={`px-8 py-3.5 rounded-xl font-bold flex items-center gap-2 transition-all text-sm tracking-wide ${
                   event.isUserRegistered
                     ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-not-allowed"
-                    : hasPendingRequest
-                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 cursor-not-allowed"
-                    : event.isSoldOut || !event.registration_open
+                    : event.isSoldOut || !event.registration_open || showingPendingRequest
                     ? "bg-gray-900 text-gray-600 border border-white/5 cursor-not-allowed"
                     : "bg-amber-500 text-black hover:bg-amber-400 shadow-xl shadow-amber-500/10 active:scale-[0.99]"
                 }`}
@@ -476,18 +483,16 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                   <>
                     <CheckCircle size={16} /> Pass Claimed Successfully
                   </>
-                ) : hasPendingRequest ? (
-                  <>
-                    <Clock3 size={16} /> Pending Review
-                  </>
                 ) : event.isSoldOut ? (
                   "Sold Out"
                 ) : !event.registration_open ? (
                   "Registration Closed"
+                ) : showingPendingRequest ? (
+                  "Request Pending Review"
                 ) : event.isMember ? (
                   "Claim Free Ticket"
-                ) : wasRejected ? (
-                  "Resubmit Payment Proof"
+                ) : showingRejectedRequest ? (
+                  `Resubmit Payment — ₹${event.ticket_price}`
                 ) : (
                   `Buy Ticket ₹${event.ticket_price}`
                 )}
@@ -550,14 +555,14 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
         </div>
       )}
 
-      {/* Manual QR Payment Modal */}
-      {showPaymentModal && event && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4 py-8 overflow-y-auto">
+      {/* QR + Manual Payment Verification Modal */}
+      {showQrModal && event && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4 overflow-y-auto py-8">
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1f232d] p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-white">Complete Your Payment</h2>
+              <h2 className="text-lg font-bold text-white">Pay via QR Code</h2>
               <button
-                onClick={() => setShowPaymentModal(false)}
+                onClick={() => setShowQrModal(false)}
                 className="text-gray-500 hover:text-white transition"
                 aria-label="Close"
               >
@@ -567,57 +572,62 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
             <p className="text-sm text-gray-400 mb-4">
               Scan the QR code below and pay{" "}
-              <span className="text-amber-400 font-bold">₹{event.ticket_price}</span> for{" "}
-              <span className="text-white font-medium">{event.title}</span>. Then upload a
-              screenshot of your payment confirmation — we'll verify it and email your ticket.
+              <span className="text-amber-400 font-bold">₹{event.ticket_price}</span>. Then upload
+              a screenshot of your payment confirmation — we'll review and confirm your ticket shortly.
             </p>
 
-            <div className="mx-auto mb-5 flex justify-center">
-              <div className="rounded-xl border border-white/10 bg-white p-3">
-                <Image src={paymentQr} alt="Payment QR Code" width={200} height={200} />
-              </div>
+            <div className="flex justify-center mb-5">
+              <img
+                src={qrImg.src}
+                alt="Payment QR code"
+                className="h-52 w-52 rounded-xl border border-white/10 object-contain bg-white p-2"
+              />
             </div>
 
-            <label className="block text-sm text-gray-300 mb-1.5">Your Full Name</label>
+            <label className="block text-sm text-gray-300 mb-1.5">Full Name</label>
             <input
               type="text"
-              value={manualName}
-              onChange={(e) => setManualName(e.target.value)}
-              placeholder="As it should appear on your ticket"
+              value={qrFullName}
+              onChange={(e) => setQrFullName(e.target.value)}
+              placeholder="Your full name"
               className="w-full mb-4 rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder-gray-500 focus:border-amber-500 focus:outline-none"
             />
 
             <label className="block text-sm text-gray-300 mb-1.5">Payment Screenshot</label>
             <label className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 bg-white/[0.02] p-5 cursor-pointer hover:border-amber-500/40 transition">
-              {screenshotPreview ? (
-                <img src={screenshotPreview} alt="Screenshot preview" className="max-h-40 rounded-lg object-contain" />
+              {qrScreenshotPreview ? (
+                <img
+                  src={qrScreenshotPreview}
+                  alt="Screenshot preview"
+                  className="h-32 rounded-lg object-contain"
+                />
               ) : (
                 <>
                   <Upload size={22} className="text-gray-500" />
-                  <span className="text-xs text-gray-500">Tap to upload screenshot (JPG, PNG)</span>
+                  <span className="text-xs text-gray-500">Click to upload screenshot</span>
                 </>
               )}
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
-                onChange={handleScreenshotChange}
+                onChange={handleQrScreenshotChange}
                 className="hidden"
               />
             </label>
 
             <div className="mt-6 flex gap-3">
               <button
-                onClick={() => setShowPaymentModal(false)}
+                onClick={() => setShowQrModal(false)}
                 className="flex-1 rounded-xl border border-white/10 py-3 text-sm font-semibold text-gray-300 hover:bg-white/5 transition"
               >
                 Cancel
               </button>
               <button
-                onClick={handleSubmitPaymentProof}
-                disabled={submitting}
+                onClick={handleQrSubmit}
+                disabled={qrSubmitting}
                 className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-sm font-bold text-black hover:bg-amber-400 transition disabled:opacity-50"
               >
-                {submitting ? <Loader2 size={16} className="animate-spin" /> : "Submit for Verification"}
+                {qrSubmitting ? <Loader2 size={16} className="animate-spin" /> : "Submit for Review"}
               </button>
             </div>
           </div>
