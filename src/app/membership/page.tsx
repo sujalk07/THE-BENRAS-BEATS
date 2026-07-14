@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import qrimage from "../assets/payment-qr.png";
 
 import Script from "next/script";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -402,7 +403,7 @@ export default function MembershipPage() {
                 <div className="mx-auto w-48 h-48 rounded-xl overflow-hidden border border-white/10 bg-white p-2">
                   {/* Replace /assets/payment-qr.png with your actual QR code image */}
                   <Image
-                    src="/assets/payment-qr.png"
+                    src={qrimage}
                     alt="Payment QR Code"
                     width={192}
                     height={192}
