@@ -59,9 +59,11 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 text-xs text-gray-500 tracking-wide">
           <p>© {currentYear} The Benaras Beats. All rights reserved.</p>
           
-          <div className="flex items-center gap-6">
-            <a href="#" className="hover:text-gray-300 transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-gray-300 transition-colors">Terms of Service</a>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            <a href="/terms" className="hover:text-gray-300 transition-colors">Terms &amp; Conditions</a>
+            <a href="/privacy" className="hover:text-gray-300 transition-colors">Privacy Policy</a>
+            <a href="/refund-policy" className="hover:text-gray-300 transition-colors">Refund Policy</a>
+            <a href="/contact" className="hover:text-gray-300 transition-colors">Contact Us</a>
           </div>
         </div>
 

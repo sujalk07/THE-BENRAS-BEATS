@@ -20,12 +20,13 @@ export default function Founder() {
 
               <div className="relative w-64 h-80 md:w-72 md:h-[26rem] rounded-2xl border border-gray-800/80 overflow-hidden">
                 <Image
-                  src={founderImg}
-                  alt="Dr. Laxman Yadav — Founder, The Benaras Beats"
-                  fill
-                  className="object-cover object-top"
-                  priority
-                />
+  src={founderImg}
+  alt="Dr. Laxman Yadav — Founder, The Benaras Beats"
+  fill
+  sizes="(max-width: 768px) 256px, 288px"
+  className="object-cover object-top"
+  priority
+/>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#050508] via-transparent to-transparent" />
               </div>
             </div>
