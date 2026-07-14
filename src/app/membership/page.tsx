@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import qrimage from "../assets/payment-qr.png";
+import qrimage from "../../assets/payment-qr.png";
 
 import Script from "next/script";
 import { useAuth } from "@/components/providers/AuthProvider";
