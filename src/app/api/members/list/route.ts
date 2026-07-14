@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     // Fetch all active memberships, oldest first, for serial numbering
     const { data: allMemberships, error } = await supabaseAdmin
       .from("memberships")
-      .select("id, user_id, created_at, expires_at, status")
+      .select("id, user_id, name, manual_name, created_at, expires_at, status")
       .eq("status", "active")
       .order("created_at", { ascending: true });
 
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
       m.expires_at ? new Date(m.expires_at) >= new Date() : true
     );
 
-    const memberUserIds = [...new Set(activeMemberships.map((m) => m.user_id))];
+    const memberUserIds = [...new Set(activeMemberships.map((m) => m.user_id).filter(Boolean))];
     const { data: profiles } = await supabaseAdmin
       .from("profiles")
       .select("id, full_name")
@@ -60,7 +60,11 @@ export async function GET(req: NextRequest) {
 
     const members = activeMemberships.map((m, index) => ({
       serial: index + 1,
-      name: profilesMap.get(m.user_id)?.full_name ?? "Member",
+      name:
+        profilesMap.get(m.user_id)?.full_name ||
+        m.manual_name ||
+        m.name ||
+        `Member #${index + 1}`,
       membership_id: m.id.slice(0, 8).toUpperCase(),
     }));
 
