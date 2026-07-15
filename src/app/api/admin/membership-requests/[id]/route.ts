@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { verifyAdmin } from "@/lib/admin-api";
-import { getAllAuthUsers } from "@/lib/get-all-auth-users";
-import { sendMembershipVerifiedEmail, sendMembershipRejectedEmail } from "@/lib/email";
+import {
+  sendMembershipRejectedEmail,
+  sendMembershipCertificateEmail,
+} from "@/lib/email";
+import { generateCertificatePDF } from "@/lib/certificate";
 
 const MEMBERSHIP_MONTHS = 6;
 
@@ -33,8 +36,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: `Request already ${request.status}.` }, { status: 409 });
     }
 
-    const allAuthUsers = await getAllAuthUsers();
-    const requesterEmail = allAuthUsers.find((u) => u.id === request.user_id)?.email;
+    const requesterEmail = request.email?.toLowerCase();
+    if (!requesterEmail) {
+  return NextResponse.json(
+    { error: "User email not found." },
+    { status: 404 }
+  );
+}
 
     if (action === "reject") {
       await supabaseAdmin
@@ -59,21 +67,53 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const expiresAt = new Date(startsAt);
     expiresAt.setMonth(expiresAt.getMonth() + MEMBERSHIP_MONTHS);
 
-    const { error: membershipError } = await supabaseAdmin.from("memberships").insert({
-      user_id: request.user_id,
-      plan_name: "introductory",
-      status: "active",
-      starts_at: startsAt.toISOString(),
-      expires_at: expiresAt.toISOString(),
-      amount: request.amount,
-      source: "qr_manual_verify",
-      membership_request_id: request.id,
-    });
+   const { error: qrError } = await supabaseAdmin
+  .from("qr_based_membership")
+  .insert({
+    name: request.full_name,
+    email: requesterEmail,
+    starts_at: startsAt.toISOString(),
+    expires_at: expiresAt.toISOString(),
+    status: "active",
+  });
 
-    if (membershipError) {
-      console.error("Error creating membership on verify:", membershipError);
-      return NextResponse.json({ error: "Failed to activate membership." }, { status: 500 });
+if (qrError) {
+  console.error(qrError);
+  return NextResponse.json(
+    { error: "Failed to create QR membership." },
+    { status: 500 }
+  );
+}
+const { error: membershipError } = await supabaseAdmin
+  .from("memberships")
+  .insert({
+    email: requesterEmail,
+    amount: request.amount,
+    status: "active",
+    starts_at: startsAt.toISOString(),
+    expires_at: expiresAt.toISOString(),
+    created_with: "qr",
+  });
+
+if (membershipError) {
+  console.error(membershipError);
+
+  return NextResponse.json(
+    {
+      error: "Failed to activate membership.",
+    },
+    {
+      status: 500,
     }
+  );
+}
+
+    await supabaseAdmin
+  .from("profiles")
+  .update({
+    membership_status: "active",
+  })
+  .eq("id", request.user_id);
 
     await supabaseAdmin
       .from("membership_requests")
@@ -85,12 +125,27 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       .eq("id", id);
 
     if (requesterEmail) {
-      await sendMembershipVerifiedEmail(
-        requesterEmail,
-        request.full_name,
-        startsAt.toISOString(),
-        expiresAt.toISOString()
-      );
+
+try {
+  const durationText = `${startsAt.toLocaleDateString("en-IN", {
+    dateStyle: "medium",
+  })} to ${expiresAt.toLocaleDateString("en-IN", {
+    dateStyle: "medium",
+  })}`;
+
+  const certificateBuffer = await generateCertificatePDF(
+    request.full_name,
+    durationText
+  );
+
+  await sendMembershipCertificateEmail(
+    requesterEmail,
+    request.full_name,
+    certificateBuffer
+  );
+} catch (err) {
+  console.error("Certificate email failed:", err);
+}
     }
 
     return NextResponse.json({ success: true, status: "verified" });

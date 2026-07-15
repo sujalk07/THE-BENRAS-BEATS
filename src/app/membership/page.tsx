@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import qrimage from "../../assets/payment-qr.png";
-
+import { useMembership } from "@/hooks/useMembership";
 import Script from "next/script";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { supabase } from "@/lib/supabase";
@@ -88,6 +88,7 @@ type MyStatus =
 
 export default function MembershipPage() {
   const { user } = useAuth();
+  const { isMember, membership, loading: membershipLoading } = useMembership();
   const router = useRouter();
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
@@ -303,7 +304,7 @@ export default function MembershipPage() {
     }
   };
 
-  if (pageLoading) {
+  if (pageLoading || membershipLoading) {
     return (
       <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-amber-500 font-medium tracking-wide">
@@ -360,12 +361,12 @@ export default function MembershipPage() {
           )}
 
           {/* Active member */}
-          {user && myStatus.status === "active" && (
+          {user && isMember && membership && (
             <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-8 text-center">
               <CheckCircle2 className="mx-auto mb-4 text-emerald-400" size={28} />
               <p className="text-lg font-semibold text-white mb-1">You're a member!</p>
               <p className="text-sm text-gray-300">
-                Valid until <span className="text-emerald-400 font-medium">{formatDate(myStatus.expiresAt)}</span>
+                Valid until <span className="text-emerald-400 font-medium">{formatDate(membership.expires_at)}</span>
               </p>
             </div>
           )}
@@ -394,7 +395,9 @@ export default function MembershipPage() {
           )}
 
           {/* Form — shown when signed in and not active/pending */}
-          {user && (myStatus.status === "none" || myStatus.status === "rejected") && (
+          {user &&
+ !isMember &&
+ (myStatus.status === "none" || myStatus.status === "rejected") && (
             <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 sm:p-8">
               <div className="text-center mb-6">
                 <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3">
@@ -588,10 +591,13 @@ export default function MembershipPage() {
                   </div>
 
                   <button
-                    disabled={isCardDisabled || isBusy}
-                    onClick={() => handleSubscribeClick(tier.id as "intro" | "regular")}
+                    disabled={isCardDisabled || isBusy || isMember}
+                    onClick={() => {
+    if (isMember) return;
+    handleSubscribeClick(tier.id as "intro" | "regular");
+}}
                     className={`mt-8 rounded-xl px-4 py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
-                      isCardDisabled || isBusy
+                      isCardDisabled || isBusy || isMember
                         ? "bg-gray-800 text-gray-500 cursor-not-allowed"
                         : tier.mostPopular
                         ? "bg-amber-500 text-black hover:bg-amber-400"
@@ -599,17 +605,19 @@ export default function MembershipPage() {
                     }`}
                   >
                     {isBusy ? (
-                      <>
-                        <Loader2 size={16} className="animate-spin" />
-                        Processing...
-                      </>
-                    ) : isCardDisabled ? (
-                      "Sold Out"
-                    ) : user ? (
-                      "Become a Member"
-                    ) : (
-                      "Login to Continue"
-                    )}
+  <>
+    <Loader2 size={16} className="animate-spin" />
+    Processing...
+  </>
+) : isMember ? (
+  `Member until ${formatDate(membership?.expires_at)}`
+) : isCardDisabled ? (
+  "Sold Out"
+) : user ? (
+  "Become a Member"
+) : (
+  "Login to Continue"
+)}
                   </button>
                 </div>
               );

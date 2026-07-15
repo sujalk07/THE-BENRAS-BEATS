@@ -1,22 +1,8 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { generateCertificatePDF } from "@/lib/certificate";
 import { sendMembershipCertificateEmail } from "@/lib/email";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabaseAdmin = createClient(
-  supabaseUrl,
-  supabaseServiceKey,
-  {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-  }
-);
 
 export async function POST(request: Request) {
   try {
@@ -84,11 +70,21 @@ export async function POST(request: Request) {
     }
 
     // Check if membership already exists
-    const { data: existingMembership } = await supabaseAdmin
-      .from("memberships")
-      .select("id")
-      .eq("order_id", razorpay_order_id)
-      .maybeSingle();
+    const { data: authUser } =
+  await supabaseAdmin.auth.admin.getUserById(userId);
+
+const userEmail = authUser.user?.email?.toLowerCase();
+
+if (!userEmail) {
+  throw new Error("User email not found.");
+}
+
+const { data: existingMembership } = await supabaseAdmin
+  .from("memberships")
+  .select("id")
+  .eq("email", userEmail)
+  .eq("status", "active")
+  .maybeSingle();
 
     if (existingMembership) {
       return NextResponse.json({
@@ -98,54 +94,66 @@ export async function POST(request: Request) {
     }
 
     // 🚨 CONCURRENCY GUARD: Final check before consuming an intro offer slot
-    if (order.is_intro_offer) {
-      const { count, error: finalCountError } = await supabaseAdmin
-        .from("memberships")
-        .select("*", { count: "exact", head: true })
-        .eq("is_intro_offer", true);
+    // if (order.is_intro_offer) {
+    //   const { count, error: finalCountError } = await supabaseAdmin
+    //     .from("memberships")
+    //     .select("*", { count: "exact", head: true })
+    //     .eq("is_intro_offer", true);
 
-      if (finalCountError) throw finalCountError;
+    //   if (finalCountError) throw finalCountError;
 
-      if ((count ?? 0) >= 50) {
-        return NextResponse.json(
-          { 
-            error: "We are deeply sorry! The last introductory membership spot was filled while your transaction was processing. Please contact support for an immediate refund." 
-          },
-          { status: 400 }
-        );
-      }
-    }
+    //   if ((count ?? 0) >= 50) {
+    //     return NextResponse.json(
+    //       { 
+    //         error: "We are deeply sorry! The last introductory membership spot was filled while your transaction was processing. Please contact support for an immediate refund." 
+    //       },
+    //       { status: 400 }
+    //     );
+    //   }
+    // }
 
+
+    const { error: razorpayMembershipError } = await supabaseAdmin
+  .from("razorpay_based_membership")
+  .insert({
+    email: userEmail,
+    razorpay_order_id,
+    razorpay_payment_id,
+    amount: order.amount,
+    is_intro_offer: order.is_intro_offer,
+    status: "paid",
+    starts_at: startsAt.toISOString(),
+    expires_at: expiresAt.toISOString(),
+    paid_at: new Date().toISOString(),
+  });
+
+if (razorpayMembershipError) {
+  throw razorpayMembershipError;
+}
+
+await supabaseAdmin
+  .from("profiles")
+  .update({
+    membership_status: "active",
+  })
+  .eq("id", userId);
     // Create Membership
     const { error: membershipError } = await supabaseAdmin
       .from("memberships")
       .insert({
-        user_id: userId,
-        plan_name: "The Benaras Beats Membership",
-        amount: order.amount,
-        status: "active",
-        starts_at: startsAt.toISOString(),
-        expires_at: expiresAt.toISOString(),
-        payment_id: razorpay_payment_id,
-        order_id: razorpay_order_id,
-        is_intro_offer: order.is_intro_offer,
-      });
+  email: userEmail,
+  amount: order.amount,
+  status: "active",
+  starts_at: startsAt.toISOString(),
+  expires_at: expiresAt.toISOString(),
+  created_with: "razorpay",
+})
 
     if (membershipError) {
       throw membershipError;
     }
 
     // Update Profile
-    const { error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .update({
-        membership_status: "active",
-      })
-      .eq("id", userId);
-
-    if (profileError) {
-      throw profileError;
-    }
 
     // ==========================
     // Generate & email the membership certificate

@@ -9,13 +9,12 @@ interface Membership {
   id: string;
   holder_name: string;
   holder_email: string;
-  plan_name: string;
   status: string;
   starts_at: string | null;
   expires_at: string | null;
   amount: number;
   created_at: string;
-  source: string;
+  created_with: string;
 }
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
@@ -178,12 +177,11 @@ export default function AdminMembershipsPage() {
               <tr>
                 <th className="p-3 font-medium">Member</th>
                 <th className="p-3 font-medium">Email</th>
-                <th className="p-3 font-medium">Plan</th>
                 <th className="p-3 font-medium">Status</th>
                 <th className="p-3 font-medium">Start</th>
                 <th className="p-3 font-medium">Expiry</th>
                 <th className="p-3 font-medium">Amount</th>
-                <th className="p-3 font-medium">Source</th>
+                <th className="p-3 font-medium">Created With</th>
                 <th className="p-3 font-medium">Purchased At</th>
                 <th className="p-3 font-medium text-right">Actions</th>
               </tr>
@@ -195,7 +193,6 @@ export default function AdminMembershipsPage() {
                   <tr key={m.id} className="border-t border-white/5">
                     <td className="p-3 font-medium">{m.holder_name}</td>
                     <td className="p-3 text-gray-400">{m.holder_email}</td>
-                    <td className="p-3 text-gray-300 capitalize">{m.plan_name}</td>
                     <td className="p-3">
                       <span
                         className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase ${
@@ -210,7 +207,19 @@ export default function AdminMembershipsPage() {
                     <td className="p-3 text-gray-400">{formatDate(m.starts_at)}</td>
                     <td className="p-3 text-gray-400">{formatDate(m.expires_at)}</td>
                     <td className="p-3 text-gray-400">₹{m.amount}</td>
-                    <td className="p-3 text-gray-500 text-xs capitalize">{(m.source ?? "razorpay").replace(/_/g, " ")}</td>
+                    <td className="p-3">
+  <span
+    className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase ${
+      m.created_with === "admin"
+        ? "bg-blue-500/10 text-blue-400"
+        : m.created_with === "qr"
+        ? "bg-purple-500/10 text-purple-400"
+        : "bg-amber-500/10 text-amber-400"
+    }`}
+  >
+    {m.created_with}
+  </span>
+</td>
                     <td className="p-3 text-gray-500">{formatDateTime(m.created_at)}</td>
                     <td className="p-3 text-right">
                       <button

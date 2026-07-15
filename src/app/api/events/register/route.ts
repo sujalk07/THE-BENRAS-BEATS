@@ -1,51 +1,64 @@
 // app/api/events/register/route.ts
+
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { registerUserForEvent } from "@/lib/event-registration";
 import { sendTicketConfirmationEmail } from "@/lib/email";
 import { getActiveMembership } from "@/lib/membership";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
 
 export async function POST(request: Request) {
   try {
     const { eventId, userId } = await request.json();
 
     if (!eventId || !userId) {
-      return NextResponse.json({ error: "Missing eventId or userId" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing eventId or userId" },
+        { status: 400 }
+      );
     }
 
-    // Check Membership
+    // =====================================================
+    // Get user's email from Auth
+    // =====================================================
+    const { data: authUser, error: authError } =
+      await supabaseAdmin.auth.admin.getUserById(userId);
 
-// ...
+    if (authError || !authUser.user?.email) {
+      return NextResponse.json(
+        { error: "User not found." },
+        { status: 404 }
+      );
+    }
 
-const activeMembership = await getActiveMembership(userId);
+    const email = authUser.user.email.toLowerCase();
 
-if (!activeMembership) {
-  return NextResponse.json(
-    { error: "Access Denied. You must have an active membership to register for events." },
-    { status: 403 }
-  );
-}
+    // =====================================================
+    // Verify active membership using email
+    // =====================================================
+    const activeMembership = await getActiveMembership(email);
 
-// still need full_name for the confirmation email
-const { data: profile } = await supabaseAdmin
-  .from("profiles")
-  .select("full_name")
-  .eq("id", userId)
-  .maybeSingle();
+    if (!activeMembership) {
+      return NextResponse.json(
+        {
+          error:
+            "Access Denied. You must have an active membership to register for events.",
+        },
+        { status: 403 }
+      );
+    }
 
-// later, wherever it's used:
+    // =====================================================
+    // Get user's profile (for confirmation email)
+    // =====================================================
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("full_name")
+      .eq("id", userId)
+      .maybeSingle();
 
-    // Check Event
+    // =====================================================
+    // Fetch Event
+    // =====================================================
     const { data: event, error: eventError } = await supabaseAdmin
       .from("events")
       .select("capacity, title, event_date, venue, registration_open")
@@ -53,17 +66,24 @@ const { data: profile } = await supabaseAdmin
       .single();
 
     if (eventError || !event) {
-      return NextResponse.json({ error: "Event not found." }, { status: 404 });
+      return NextResponse.json(
+        { error: "Event not found." },
+        { status: 404 }
+      );
     }
 
     if (!event.registration_open) {
       return NextResponse.json(
-        { error: "Registration for this event is currently closed." },
+        {
+          error: "Registration for this event is currently closed.",
+        },
         { status: 403 }
       );
     }
 
+    // =====================================================
     // Check Capacity
+    // =====================================================
     const { count, error: countError } = await supabaseAdmin
       .from("event_registrations")
       .select("*", { count: "exact", head: true })
@@ -72,10 +92,15 @@ const { data: profile } = await supabaseAdmin
     if (countError) throw countError;
 
     if ((count ?? 0) >= event.capacity) {
-      return NextResponse.json({ error: "This event is completely full!" }, { status: 400 });
+      return NextResponse.json(
+        { error: "This event is completely full!" },
+        { status: 400 }
+      );
     }
 
-    // Check Already Registered
+    // =====================================================
+    // Already Registered?
+    // =====================================================
     const { data: existingRegistration } = await supabaseAdmin
       .from("event_registrations")
       .select("id")
@@ -84,10 +109,17 @@ const { data: profile } = await supabaseAdmin
       .maybeSingle();
 
     if (existingRegistration) {
-      return NextResponse.json({ error: "You are already registered for this event!" }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "You are already registered for this event!",
+        },
+        { status: 400 }
+      );
     }
 
-    // Create ticket + registration via the RPC (single source of truth — no manual inserts here)
+    // =====================================================
+    // Create Ticket + Registration
+    // =====================================================
     await registerUserForEvent({
       eventId,
       userId,
@@ -97,7 +129,9 @@ const { data: profile } = await supabaseAdmin
       claimedByMember: true,
     });
 
-    // Fetch the ticket we just created + event details + user's email, then send confirmation
+    // =====================================================
+    // Fetch Ticket
+    // =====================================================
     const { data: newTicket } = await supabaseAdmin
       .from("tickets")
       .select("id")
@@ -107,15 +141,19 @@ const { data: profile } = await supabaseAdmin
       .limit(1)
       .maybeSingle();
 
+    // =====================================================
+    // Fetch Event Details
+    // =====================================================
     const { data: eventDetails } = await supabaseAdmin
       .from("events")
       .select("title, event_date, venue")
       .eq("id", eventId)
       .maybeSingle();
 
-    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
-
-    if (newTicket && eventDetails && authUser?.user?.email) {
+    // =====================================================
+    // Send Confirmation Email
+    // =====================================================
+    if (newTicket && eventDetails) {
       await sendTicketConfirmationEmail({
         to: authUser.user.email,
         holderName: profile?.full_name ?? "Guest",
@@ -134,6 +172,14 @@ const { data: profile } = await supabaseAdmin
     });
   } catch (error: any) {
     console.error(error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+
+    return NextResponse.json(
+      {
+        error: error.message,
+      },
+      {
+        status: 500,
+      }
+    );
   }
 }

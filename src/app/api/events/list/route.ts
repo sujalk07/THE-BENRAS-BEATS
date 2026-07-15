@@ -1,3 +1,4 @@
+import { getActiveMembership } from "@/lib/membership";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -45,15 +46,17 @@ export async function GET(request: Request) {
       }
 
       // Fetch membership status
-      const { data: profile } = await supabaseAdmin
-        .from("profiles")
-        .select("membership_status")
-        .eq("id", userId)
-        .single();
+     // Get user's email
+const { data: authUser, error: authError } =
+  await supabaseAdmin.auth.admin.getUserById(userId);
 
-      if (profile?.membership_status === "active") {
-        isMember = true;
-      }
+if (!authError && authUser.user?.email) {
+  const membership = await getActiveMembership(
+    authUser.user.email.toLowerCase()
+  );
+
+  isMember = !!membership;
+}
     }
 
     // 4. Format response

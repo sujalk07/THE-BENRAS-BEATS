@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMembership } from "@/hooks/useMembership";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import {
@@ -11,54 +12,18 @@ import {
   Music,
 } from "lucide-react";
 
-interface MembershipInfo {
-  status: "active" | "inactive" | "pending" | "rejected" | "none";
-  membershipId: string | null;
-  plan: string | null;
-  expiresAt: string | null;
-}
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  const [membership, setMembership] = useState<MembershipInfo>({
-    status: "none",
-    membershipId: null,
-    plan: null,
-    expiresAt: null,
-  });
-  const [dataLoading, setDataLoading] = useState(true);
+  const { membership, loading: dataLoading } = useMembership();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login?redirect=/profile");
-      return;
-    }
-
-    async function fetchProfileData() {
-      if (!user) return;
-
-      try {
-        const res = await fetch(`/api/membership/my-status?userId=${user.id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setMembership({
-            status: data.status ?? "none",
-            membershipId: data.membershipId ?? null,
-            plan: data.plan ?? null,
-            expiresAt: data.expiresAt ?? null,
-          });
-        }
-      } catch (err) {
-        console.error("Error fetching profile data:", err);
-      } finally {
-        setDataLoading(false);
-      }
-    }
-
-    fetchProfileData();
-  }, [loading, user, router]);
+  if (!loading && !user) {
+    router.push("/login?redirect=/profile");
+  }
+}, [loading, user, router]);
 
   if (loading || !user) {
     return (
@@ -73,18 +38,9 @@ export default function ProfilePage() {
     return new Date(dateStr).toLocaleDateString("en-IN", { dateStyle: "medium" });
   };
 
-  const isActive = membership.status === "active";
+  const isActive = !!membership;
 
-  const planLabel =
-    !isActive
-      ? "No Active Plan"
-      : membership.plan === "intro"
-      ? "Introductory Membership"
-      : membership.plan === "regular"
-      ? "Regular Membership"
-      : membership.plan
-      ? membership.plan
-      : "No Active Plan";
+  const planLabel = "Premium Membership";
 
   const fullName =
     user.user_metadata?.full_name || user.user_metadata?.name || "Member";
@@ -202,9 +158,9 @@ export default function ProfilePage() {
                         className="mt-0.5 font-mono text-sm font-bold tracking-widest"
                         style={{ color: "#2b1e03" }}
                       >
-                        {membership.membershipId
-                          ? membership.membershipId.slice(0, 8).toUpperCase()
-                          : "—"}
+                        {membership
+  ? membership.membershipId.slice(0, 8).toUpperCase()
+  : "—"}
                       </p>
                     </div>
 
@@ -215,12 +171,12 @@ export default function ProfilePage() {
                       >
                         Valid Until
                       </p>
-                      <p
-                        className="mt-0.5 text-sm font-bold"
-                        style={{ color: "#2b1e03" }}
-                      >
-                        {formatDate(membership.expiresAt)}
-                      </p>
+                     <p
+  className="mt-0.5 text-sm font-bold"
+  style={{ color: "#2b1e03" }}
+>
+  {formatDate(membership?.expiresAt ?? null)}
+</p>
                     </div>
                   </div>
                 </div>

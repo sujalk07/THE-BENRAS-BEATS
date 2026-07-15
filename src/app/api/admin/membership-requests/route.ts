@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { verifyAdmin } from "@/lib/admin-api";
-import { getAllAuthUsers } from "@/lib/get-all-auth-users";
 
 export async function GET(req: NextRequest) {
   try {
@@ -26,8 +25,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ requests: [] });
     }
 
-    const allAuthUsers = await getAllAuthUsers();
-    const emailMap = new Map(allAuthUsers.map((u) => [u.id, u.email]));
 
     const result = await Promise.all(
       requests.map(async (r) => {
@@ -39,7 +36,7 @@ export async function GET(req: NextRequest) {
           id: r.id,
           userId: r.user_id,
           fullName: r.full_name,
-          email: emailMap.get(r.user_id) ?? "—",
+          email: r.email,
           amount: r.amount,
           status: r.status,
           screenshotUrl: signedUrlData?.signedUrl ?? null,

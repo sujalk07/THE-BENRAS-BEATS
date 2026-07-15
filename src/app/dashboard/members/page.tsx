@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { ArrowLeft, Loader2, Crown, User } from "lucide-react";
+import { useMembership } from "@/hooks/useMembership";
 
 interface FeaturedMember {
   id: string;
@@ -21,12 +22,13 @@ interface MemberRow {
 
 export default function DashboardMembersPage() {
   const { user, loading: authLoading } = useAuth();
+  const { membership, loading: membershipLoading } = useMembership();
   const router = useRouter();
 
   const [featured, setFeatured] = useState<FeaturedMember[]>([]);
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [notAMember, setNotAMember] = useState(false);
+  const notAMember = !membership;
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -35,15 +37,19 @@ export default function DashboardMembersPage() {
     }
 
     async function fetchMembers() {
-      if (!user) return;
-      try {
-        const res = await fetch(`/api/members/list?userId=${user.id}`);
-        const data = await res.json();
+  if (!user || !membership) {
+    setLoading(false);
+    return;
+  }
 
-        if (res.status === 403) {
-          setNotAMember(true);
-          return;
-        }
+  try {
+    const res = await fetch(`/api/members/list?userId=${user.id}`);
+    const data = await res.json();
+
+    if (res.ok) {
+      setFeatured(data.featured ?? []);
+      setMembers(data.members ?? []);
+    }
 
         if (res.ok) {
           setFeatured(data.featured ?? []);
@@ -57,9 +63,9 @@ export default function DashboardMembersPage() {
     }
 
     fetchMembers();
-  }, [authLoading, user, router]);
+}, [authLoading, membership, user]);
 
-  if (authLoading || loading) {
+  if (authLoading || membershipLoading || loading) {
     return (
       <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center text-gray-400">
         <Loader2 className="animate-spin mr-2" size={18} /> Loading...

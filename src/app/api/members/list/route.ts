@@ -11,13 +11,22 @@ export async function GET(req: NextRequest) {
     }
 
     // Confirm the requester is themselves an active member before revealing the list
-    const { data: requesterMembership } = await supabaseAdmin
-      .from("memberships")
-      .select("status, expires_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+
+if (!authUser.user?.email) {
+  return NextResponse.json({ error: "User not found" }, { status: 404 });
+}
+
+const email = authUser.user.email.toLowerCase();
+
+const { data: requesterMembership } = await supabaseAdmin
+  .from("memberships")
+  .select("status, expires_at")
+  .ilike("email", email)
+  .eq("status", "active")
+  .order("created_at", { ascending: false })
+  .limit(1)
+  .maybeSingle();
 
     const isExpired = requesterMembership?.expires_at
       ? new Date(requesterMembership.expires_at) < new Date()
@@ -36,7 +45,7 @@ export async function GET(req: NextRequest) {
     // Fetch all active memberships, oldest first, for serial numbering
     const { data: allMemberships, error } = await supabaseAdmin
   .from("memberships")
-  .select("id, user_id, manual_name, created_at, expires_at, status")
+  .select("id, email, created_at, expires_at, status")
   .eq("status", "active")
   .order("created_at", { ascending: true });
 
@@ -51,17 +60,26 @@ export async function GET(req: NextRequest) {
       m.expires_at ? new Date(m.expires_at) >= new Date() : true
     );
 
-    const memberUserIds = [...new Set(activeMemberships.map((m) => m.user_id).filter(Boolean))];
-    const { data: profiles } = await supabaseAdmin
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", memberUserIds);
+    const memberEmails = activeMemberships
+  .map((m) => m.email?.toLowerCase())
+  .filter((email): email is string => !!email);
 
-    const profilesMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+const { data: profiles } = await supabaseAdmin
+  .from("profiles")
+  .select("email, full_name")
+  .in("email", memberEmails);
+
+const profilesMap = new Map(
+  (profiles ?? [])
+    .filter((p) => p.email)
+    .map((p) => [p.email!.toLowerCase(), p.full_name])
+);
 
     const members = activeMemberships.map((m, index) => ({
   serial: index + 1,
-  name: profilesMap.get(m.user_id)?.full_name || m.manual_name || `Member #${index + 1}`,
+  name:
+  profilesMap.get(m.email.toLowerCase()) ??
+  `Member #${index + 1}`,
   membership_id: m.id.slice(0, 8).toUpperCase(),
 }));
 

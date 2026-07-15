@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
+const MEMBERSHIP_AMOUNT = 4999;
+
 const razorpay = new Razorpay({
   key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
   key_secret: process.env.RAZORPAY_KEY_SECRET!,
@@ -9,14 +11,7 @@ const razorpay = new Razorpay({
 
 export async function POST(request: Request) {
   try {
-    const { plan, userId } = await request.json();
-
-    if (!plan || !["intro", "regular"].includes(plan)) {
-      return NextResponse.json(
-        { error: "Invalid membership plan." },
-        { status: 400 }
-      );
-    }
+    const { userId } = await request.json();
 
     if (!userId) {
       return NextResponse.json(
@@ -25,58 +20,50 @@ export async function POST(request: Request) {
       );
     }
 
-    let amount = 6000;
-    let isIntroOffer = false;
+    // Get authenticated user's email
+    const { data: authUser, error: authError } =
+      await supabaseAdmin.auth.admin.getUserById(userId);
 
-    // Intro Offer Logic
-    if (plan === "intro") {
-      const { count, error } = await supabaseAdmin
-        .from("memberships")
-        .select("*", {
-          count: "exact",
-          head: true,
-        })
-        .eq("is_intro_offer", true);
+    if (authError || !authUser.user?.email) {
+      return NextResponse.json(
+        { error: "User not found." },
+        { status: 404 }
+      );
+    }
 
-      if (error) {
-        console.error(error);
+    const email = authUser.user.email.toLowerCase();
 
-        return NextResponse.json(
-          { error: "Failed to check intro memberships." },
-          { status: 500 }
-        );
-      }
+    // Prevent duplicate active memberships
+    const { data: existingMembership } = await supabaseAdmin
+      .from("memberships")
+      .select("id")
+      .eq("email", email)
+      .eq("status", "active")
+      .maybeSingle();
 
-      if ((count ?? 0) >= 50) {
-        return NextResponse.json(
-          {
-            soldOut: true,
-            error: "Introductory membership has ended.",
-          },
-          { status: 400 }
-        );
-      }
-
-      amount = 4999;
-      isIntroOffer = true;
+    if (existingMembership) {
+      return NextResponse.json(
+        { error: "You already have an active membership." },
+        { status: 409 }
+      );
     }
 
     // Create Razorpay Order
     const order = await razorpay.orders.create({
-      amount: amount * 100,
+      amount: MEMBERSHIP_AMOUNT * 100,
       currency: "INR",
       receipt: `membership_${Date.now()}`,
     });
 
-    // Save Order in Database
+    // Save pending order
     const { error: insertError } = await supabaseAdmin
       .from("membership_orders")
       .insert({
         user_id: userId,
         razorpay_order_id: order.id,
-        plan,
-        amount,
-        is_intro_offer: isIntroOffer,
+        plan: "intro",
+        amount: MEMBERSHIP_AMOUNT,
+        is_intro_offer: true,
         status: "pending",
       });
 
@@ -94,8 +81,6 @@ export async function POST(request: Request) {
       orderId: order.id,
       amount: order.amount,
       currency: order.currency,
-      plan,
-      isIntroOffer,
     });
   } catch (error) {
     console.error(error);

@@ -1,12 +1,10 @@
 "use client";
-
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import heroImage from "../assets/hero.jpg";
 import { Great_Vibes, Playfair_Display } from "next/font/google";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { useMembership } from "@/hooks/useMembership";
 
 const greatVibes = Great_Vibes({
   subsets: ["latin"],
@@ -25,44 +23,8 @@ export default function Hero() {
   const router = useRouter();
 
   // Track actual membership verification status separately from basic login
-  const [isActiveMember, setIsActiveMember] = useState(false);
+  const { isMember, loading } = useMembership();
 
-  useEffect(() => {
-    async function checkMembershipStatus() {
-      if (!user) {
-        setIsActiveMember(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("membership_status")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (error) {
-          console.error("Supabase error fetching profile:", error.message);
-          setIsActiveMember(false);
-          return;
-        }
-
-        // Trim any hidden whitespace and force lowercase comparison safely
-        const status = data?.membership_status?.trim().toLowerCase();
-
-        if (status === "active") {
-          setIsActiveMember(true);
-        } else {
-          setIsActiveMember(false);
-        }
-      } catch (err) {
-        console.error("Error verifying profile membership state:", err);
-        setIsActiveMember(false);
-      }
-    }
-
-    checkMembershipStatus();
-  }, [user]);
 
   // Action 1: Smooth scroll to events listing
   const handleScrollToEvents = () => {
@@ -76,17 +38,19 @@ export default function Hero() {
 
   // Action 2: Premium Member redirection loop
   const handleMembershipClick = () => {
-    if (!user) {
-      // Scenario 1: Completely logged out -> Go to signup, then auto-forward to membership page
-      router.push("/signup?redirectTo=/membership");
-    } else if (!isActiveMember) {
-      // Scenario 2: Logged in but not active yet -> Skip signup, go straight to membership page
-      router.push("/membership");
-    } else {
-      // Scenario 3: Logged in and active premium member -> Go straight to the dashboard panel
-      router.push("/dashboard");
-    }
-  };
+  if (!user) {
+    router.push("/signup?redirectTo=/membership");
+    return;
+  }
+
+  if (loading) return;
+
+  if (isMember) {
+    router.push("/dashboard");
+  } else {
+    router.push("/membership");
+  }
+};
 
   return (
     <section
@@ -153,7 +117,11 @@ export default function Hero() {
               onClick={handleMembershipClick}
               className="rounded-xl border border-purple-500/40 bg-black/40 backdrop-blur-sm px-8 py-3.5 font-medium text-white shadow-[0_0_15px_rgba(168,85,247,0.05)] transition-all duration-300 hover:border-purple-400 hover:bg-purple-950/20 hover:shadow-[0_0_30px_rgba(168,85,247,0.45)] active:scale-[0.98]"
             >
-              {isActiveMember ? "Go to Dashboard" : "Become a Member"}
+              {loading
+  ? "Loading..."
+  : isMember
+  ? "Go to Dashboard"
+  : "Become a Member"}
             </button>
           </div>
         </div>
