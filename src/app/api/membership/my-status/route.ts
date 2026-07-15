@@ -10,10 +10,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "userId is required." }, { status: 400 });
     }
 
-    // Check for an active membership first
     const { data: membership } = await supabaseAdmin
       .from("memberships")
-      .select("id, status, starts_at, expires_at")
+      .select("id, status, plan_name, starts_at, expires_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -24,13 +23,14 @@ export async function GET(req: NextRequest) {
       if (!expired) {
         return NextResponse.json({
           status: "active",
+          membershipId: membership.id,
+          plan: membership.plan_name,
           startsAt: membership.starts_at,
           expiresAt: membership.expires_at,
         });
       }
     }
 
-    // Otherwise check the latest membership request
     const { data: request } = await supabaseAdmin
       .from("membership_requests")
       .select("id, status, created_at, admin_note")
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
 
     if (request) {
       return NextResponse.json({
-        status: request.status, // 'pending' | 'verified' | 'rejected'
+        status: request.status,
         requestId: request.id,
         submittedAt: request.created_at,
         adminNote: request.admin_note,

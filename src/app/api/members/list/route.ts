@@ -35,10 +35,11 @@ export async function GET(req: NextRequest) {
 
     // Fetch all active memberships, oldest first, for serial numbering
     const { data: allMemberships, error } = await supabaseAdmin
-      .from("memberships")
-      .select("id, user_id, manual_name, created_at, expires_at, status")
-      .eq("status", "active")
-      .order("created_at", { ascending: true });
+  .from("memberships")
+  .select("id, user_id, manual_name, created_at, expires_at, status")
+  .eq("status", "active")
+  .order("created_at", { ascending: true });
+
 
     if (error) {
       console.error("Members list fetch error:", error);
@@ -59,13 +60,10 @@ export async function GET(req: NextRequest) {
     const profilesMap = new Map((profiles ?? []).map((p) => [p.id, p]));
 
     const members = activeMemberships.map((m, index) => ({
-      serial: index + 1,
-      name:
-        profilesMap.get(m.user_id)?.full_name ||
-        m.manual_name ||
-        `Member #${index + 1}`,
-      membership_id: m.id.slice(0, 8).toUpperCase(),
-    }));
+  serial: index + 1,
+  name: profilesMap.get(m.user_id)?.full_name || m.manual_name || `Member #${index + 1}`,
+  membership_id: m.id.slice(0, 8).toUpperCase(),
+}));
 
     return NextResponse.json({
       featured: featured ?? [],

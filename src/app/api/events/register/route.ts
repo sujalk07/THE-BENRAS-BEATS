@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { registerUserForEvent } from "@/lib/event-registration";
 import { sendTicketConfirmationEmail } from "@/lib/email";
+import { getActiveMembership } from "@/lib/membership";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -23,22 +24,26 @@ export async function POST(request: Request) {
     }
 
     // Check Membership
-    const { data: profile, error: profileError } = await supabaseAdmin
+
+// ...
+
+const activeMembership = await getActiveMembership(userId);
+
+if (!activeMembership) {
+  return NextResponse.json(
+    { error: "Access Denied. You must have an active membership to register for events." },
+    { status: 403 }
+  );
+}
+
+// still need full_name for the confirmation email
+const { data: profile } = await supabaseAdmin
   .from("profiles")
-  .select("membership_status, full_name")
+  .select("full_name")
   .eq("id", userId)
-  .single();
+  .maybeSingle();
 
-    if (profileError || !profile) {
-      return NextResponse.json({ error: "User profile not found." }, { status: 404 });
-    }
-
-    if (profile.membership_status !== "active") {
-      return NextResponse.json(
-        { error: "Access Denied. You must have an active membership to register for events." },
-        { status: 403 }
-      );
-    }
+// later, wherever it's used:
 
     // Check Event
     const { data: event, error: eventError } = await supabaseAdmin
@@ -113,7 +118,7 @@ export async function POST(request: Request) {
     if (newTicket && eventDetails && authUser?.user?.email) {
       await sendTicketConfirmationEmail({
         to: authUser.user.email,
-        holderName: profile.full_name ?? "Guest",
+        holderName: profile?.full_name ?? "Guest",
         eventTitle: eventDetails.title,
         eventDate: eventDetails.event_date,
         venue: eventDetails.venue,

@@ -12,11 +12,10 @@ import {
 } from "lucide-react";
 
 interface MembershipInfo {
-  membership_status: "active" | "inactive";
-  membership_id: string | null;
-  plan: "intro" | "regular" | null;
-  start_date: string | null;
-  expiry_date: string | null;
+  status: "active" | "inactive" | "pending" | "rejected" | "none";
+  membershipId: string | null;
+  plan: string | null;
+  expiresAt: string | null;
 }
 
 export default function ProfilePage() {
@@ -24,11 +23,10 @@ export default function ProfilePage() {
   const router = useRouter();
 
   const [membership, setMembership] = useState<MembershipInfo>({
-    membership_status: "inactive",
-    membership_id: null,
+    status: "none",
+    membershipId: null,
     plan: null,
-    start_date: null,
-    expiry_date: null,
+    expiresAt: null,
   });
   const [dataLoading, setDataLoading] = useState(true);
 
@@ -42,15 +40,14 @@ export default function ProfilePage() {
       if (!user) return;
 
       try {
-        const res = await fetch(`/api/membership-status?userId=${user.id}`);
+        const res = await fetch(`/api/membership/my-status?userId=${user.id}`);
         if (res.ok) {
           const data = await res.json();
           setMembership({
-            membership_status: data.membership_status ?? "inactive",
-            membership_id: data.membership_id ?? null,
+            status: data.status ?? "none",
+            membershipId: data.membershipId ?? null,
             plan: data.plan ?? null,
-            start_date: data.start_date ?? null,
-            expiry_date: data.expiry_date ?? null,
+            expiresAt: data.expiresAt ?? null,
           });
         }
       } catch (err) {
@@ -76,7 +73,7 @@ export default function ProfilePage() {
     return new Date(dateStr).toLocaleDateString("en-IN", { dateStyle: "medium" });
   };
 
-  const isActive = membership.membership_status === "active";
+  const isActive = membership.status === "active";
 
   const planLabel =
     !isActive
@@ -205,8 +202,8 @@ export default function ProfilePage() {
                         className="mt-0.5 font-mono text-sm font-bold tracking-widest"
                         style={{ color: "#2b1e03" }}
                       >
-                        {membership.membership_id
-                          ? membership.membership_id.slice(0, 8).toUpperCase()
+                        {membership.membershipId
+                          ? membership.membershipId.slice(0, 8).toUpperCase()
                           : "—"}
                       </p>
                     </div>
@@ -222,7 +219,7 @@ export default function ProfilePage() {
                         className="mt-0.5 text-sm font-bold"
                         style={{ color: "#2b1e03" }}
                       >
-                        {formatDate(membership.expiry_date)}
+                        {formatDate(membership.expiresAt)}
                       </p>
                     </div>
                   </div>
