@@ -4,6 +4,7 @@ import heroImage from "../assets/hero.jpg";
 import { Great_Vibes, Playfair_Display } from "next/font/google";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useMembership } from "@/hooks/useMembership";
 
 const greatVibes = Great_Vibes({
@@ -24,7 +25,9 @@ export default function Hero() {
 
   // Track actual membership verification status separately from basic login
   const { isMember, loading } = useMembership();
-
+  const [showClaimTicket, setShowClaimTicket] = useState(false);
+const [claimEventId, setClaimEventId] = useState<string | null>(null);
+const [claimLoading, setClaimLoading] = useState(false);
 
   // Action 1: Smooth scroll to events listing
   const handleScrollToEvents = () => {
@@ -49,6 +52,80 @@ export default function Hero() {
     router.push("/dashboard");
   } else {
     router.push("/membership");
+  }
+};
+useEffect(() => {
+  if (loading) return;
+
+  async function checkNextEvent() {
+    if (!user || !isMember) {
+      setShowClaimTicket(false);
+      setClaimEventId(null);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/events/list?userId=${user.id}`);
+      const data = await res.json();
+
+      // Find the first upcoming event that can still be claimed
+      const nextEvent = data.events?.find(
+        (event: any) =>
+          !event.isUserRegistered && !event.isSoldOut
+      );
+
+      if (!nextEvent) {
+        setShowClaimTicket(false);
+        setClaimEventId(null);
+        return;
+      }
+
+      setShowClaimTicket(true);
+      setClaimEventId(nextEvent.id);
+    } catch (err) {
+      console.error(err);
+      setShowClaimTicket(false);
+      setClaimEventId(null);
+    }
+  }
+
+  checkNextEvent();
+}, [user, isMember, loading]);
+
+const handleClaimTicket = async () => {
+  if (!claimEventId || !user) return;
+
+  setClaimLoading(true);
+
+  try {
+    const res = await fetch("/api/events/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        eventId: claimEventId,
+        userId: user.id,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to claim ticket.");
+    }
+
+    alert("🎉 " + data.message);
+
+    setShowClaimTicket(false);
+    setClaimEventId(null);
+
+    // Refresh so the Hero and event sections reflect the new state.
+    router.refresh();
+  } catch (err: any) {
+    alert(err.message);
+  } finally {
+    setClaimLoading(false);
   }
 };
 
@@ -104,13 +181,25 @@ export default function Hero() {
 
           <div className="mt-10 flex flex-wrap gap-5 items-center">
             {/* Left Button: Explore Events */}
-            <button
-              onClick={handleScrollToEvents}
-              className="relative group overflow-hidden rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-8 py-3.5 font-semibold text-black shadow-[0_0_20px_rgba(245,158,11,0.25)] transition-all duration-300 hover:from-amber-400 hover:to-amber-500 hover:shadow-[0_0_35px_rgba(245,158,11,0.6)] active:scale-[0.98]"
-            >
-              <span className="relative z-10">Explore Events</span>
-              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-shimmer" />
-            </button>
+<button
+  onClick={
+    showClaimTicket
+      ? handleClaimTicket
+      : handleScrollToEvents
+  }
+  disabled={claimLoading}
+  className="relative group overflow-hidden rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-8 py-3.5 font-semibold text-black shadow-[0_0_20px_rgba(245,158,11,0.25)] transition-all duration-300 hover:from-amber-400 hover:to-amber-500 hover:shadow-[0_0_35px_rgba(245,158,11,0.6)] active:scale-[0.98]"
+>
+  <span className="relative z-10">
+    {claimLoading
+      ? "Claiming..."
+      : showClaimTicket
+      ? "Claim Your Free Ticket"
+      : "Explore Events"}
+  </span>
+
+  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-shimmer" />
+</button>
 
             {/* Right Button: Dynamic Membership check */}
             <button

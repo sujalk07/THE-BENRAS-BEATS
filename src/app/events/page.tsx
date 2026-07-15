@@ -2,8 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { useMembership } from "@/hooks/useMembership";
 import { useRouter } from "next/navigation";
-import { Calendar, MapPin, CheckCircle, Users, ArrowLeft, Loader2 } from "lucide-react";
+import {
+  Calendar,
+  MapPin,
+  CheckCircle,
+  Users,
+  ArrowLeft,
+  Loader2,
+} from "lucide-react";
 
 interface FormattedEvent {
   id: string;
@@ -20,16 +28,22 @@ interface FormattedEvent {
 
 export default function EventsPage() {
   const { user } = useAuth();
+  const { isMember } = useMembership();
   const router = useRouter();
+
   const [events, setEvents] = useState<FormattedEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [registeringId, setRegisteringId] = useState<string | null>(null);
 
   const fetchEvents = async () => {
     try {
-      const url = user ? `/api/events/list?userId=${user.id}` : "/api/events/list";
+      const url = user
+        ? `/api/events/list?userId=${user.id}`
+        : "/api/events/list";
+
       const res = await fetch(url);
       const data = await res.json();
+
       setEvents(data.events || []);
     } catch (err) {
       console.error("Error fetching events:", err);
@@ -44,16 +58,29 @@ export default function EventsPage() {
 
   const handleRegister = async (eventId: string) => {
     if (!user) {
-      router.push(`/login?redirect=/events`);
+      router.push("/login?redirect=/events");
       return;
     }
 
+    // Non-members go to the event details page
+    if (!isMember) {
+      router.push(`/events/${eventId}`);
+      return;
+    }
+
+    // Members claim free ticket directly
     setRegisteringId(eventId);
+
     try {
       const response = await fetch("/api/events/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId, userId: user.id }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          eventId,
+          userId: user.id,
+        }),
       });
 
       const data = await response.json();
@@ -63,6 +90,7 @@ export default function EventsPage() {
       }
 
       alert("🎉 " + data.message);
+
       fetchEvents();
     } catch (err: any) {
       alert(err.message);
@@ -89,7 +117,6 @@ export default function EventsPage() {
           type="button"
           onClick={() => router.push("/")}
           className="mb-8 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-amber-400 transition hover:bg-white/10 hover:text-amber-300"
-          aria-label="Back to home"
         >
           <ArrowLeft size={16} />
           Back to Home
@@ -99,20 +126,24 @@ export default function EventsPage() {
           <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-3">
             Upcoming <span className="text-amber-500">Events</span>
           </h1>
+
           <p className="text-gray-400 max-w-md mx-auto text-sm md:text-base">
-            Exclusive entry gates open exclusively for registered Benaras Beats crew members.
+            Discover upcoming performances and reserve your place.
           </p>
         </header>
 
         {events.length === 0 ? (
           <div className="text-center text-gray-500 border border-white/5 bg-white/[0.01] rounded-2xl p-12 max-w-md mx-auto mt-12">
-            No dynamic event instances discovered in this tracking block. Check back soon!
+            No upcoming events.
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {events.map((event) => {
-              const btnDisabled = event.isUserRegistered || event.isSoldOut;
-              const isRegistering = registeringId === event.id;
+              const btnDisabled =
+                event.isSoldOut || event.isUserRegistered;
+
+              const isRegistering =
+                registeringId === event.id;
 
               return (
                 <div
@@ -121,7 +152,7 @@ export default function EventsPage() {
                 >
                   <div>
                     {event.image_url ? (
-                      <div className="relative w-full h-48 bg-gray-900">
+                      <div className="relative h-48">
                         <img
                           src={event.image_url}
                           alt={event.title}
@@ -130,39 +161,51 @@ export default function EventsPage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-[#1f232d] via-transparent to-transparent" />
                       </div>
                     ) : (
-                      <div className="w-full h-48 bg-gradient-to-br from-amber-500/10 to-gray-800 flex items-center justify-center text-amber-500/40 text-sm font-semibold border-b border-white/5">
+                      <div className="h-48 bg-gradient-to-br from-amber-500/10 to-gray-800 flex items-center justify-center text-amber-500/40">
                         Benaras Beats Experience
                       </div>
                     )}
 
                     <div className="p-6">
-                      <h3 className="text-2xl font-bold text-white mb-3 tracking-tight line-clamp-1">
+                      <h3 className="text-2xl font-bold text-white mb-3">
                         {event.title}
                       </h3>
-                      <p className="text-gray-300 text-sm mb-6 line-clamp-3 leading-relaxed">
-                        {event.description || "No specific details provided for this session entry."}
+
+                      <p className="text-gray-300 text-sm mb-6 line-clamp-3">
+                        {event.description}
                       </p>
 
-                      <div className="space-y-3 text-sm font-medium border-t border-white/5 pt-4">
-                        <div className="flex items-center gap-3 text-gray-200">
-                          <Calendar size={16} className="text-amber-500 shrink-0" />
-                          <span>{new Date(event.event_date).toLocaleDateString("en-IN", { dateStyle: "long" })}</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-gray-200">
-                          <MapPin size={16} className="text-amber-500 shrink-0" />
-                          <span className="line-clamp-1">{event.venue}</span>
-                        </div>
+                      <div className="space-y-3 border-t border-white/5 pt-4">
                         <div className="flex items-center gap-3">
-                          <Users size={16} className="text-amber-500 shrink-0" />
-                          <span className={event.isSoldOut ? "text-red-400 font-bold" : "text-gray-200"}>
-                            {event.isSoldOut ? "🔴 Sold Out / Event Full" : `🟢 ${event.slotsLeft} / ${event.capacity} slots remaining`}
+                          <Calendar size={16} className="text-amber-500" />
+                          <span>
+                            {new Date(event.event_date).toLocaleDateString(
+                              "en-IN",
+                              {
+                                dateStyle: "long",
+                              }
+                            )}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <MapPin size={16} className="text-amber-500" />
+                          <span>{event.venue}</span>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <Users size={16} className="text-amber-500" />
+                          <span>
+                            {event.isSoldOut
+                              ? "🔴 Sold Out"
+                              : `${event.slotsLeft}/${event.capacity} slots remaining`}
                           </span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-6 pt-0 mt-4">
+                                    <div className="p-6 pt-0">
                     <button
                       disabled={btnDisabled}
                       onClick={() => handleRegister(event.id)}
@@ -176,17 +219,26 @@ export default function EventsPage() {
                     >
                       {isRegistering ? (
                         <>
-                          <Loader2 size={18} className="animate-spin" />
+                          <Loader2
+                            size={18}
+                            className="animate-spin"
+                          />
                           Registering...
                         </>
                       ) : event.isUserRegistered ? (
                         <>
-                          <CheckCircle size={18} className="text-green-400" /> Registered ✓
+                          <CheckCircle
+                            size={18}
+                            className="text-green-400"
+                          />
+                          Registered ✓
                         </>
                       ) : event.isSoldOut ? (
                         "Fully Booked"
+                      ) : isMember ? (
+                        "Claim Free Ticket"
                       ) : (
-                        "Secure Your Ticket Spot"
+                        "Buy Ticket"
                       )}
                     </button>
                   </div>
