@@ -72,14 +72,15 @@ export default function RefundPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-white mb-2">4. Refund Processing</h2>
-            <p>
-              Approved refunds are processed back to the original payment
-              method used at checkout, via Razorpay. Depending on your bank
-              or payment provider, it may take 5–10 business days for the
-              refund to reflect in your account after we initiate it.
-            </p>
-          </section>
+  <h2 className="text-lg font-bold text-white mb-2">4. Refund Processing</h2>
+  <p>
+    Approved refunds are processed back to the original payment
+    method used at checkout — whether via our payment gateway or a
+    manual bank/UPI transfer. Depending on your bank or payment
+    provider, it may take 5–10 business days for the refund to
+    reflect in your account after we initiate it.
+  </p>
+</section>
 
           <section>
             <h2 className="text-lg font-bold text-white mb-2">5. How to Request a Refund</h2>

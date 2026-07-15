@@ -74,15 +74,17 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-white mb-2">5. Payments</h2>
-            <p>
-              All payments made on our platform are processed securely
-              through Razorpay, a third-party payment gateway. We do not
-              store your card, UPI, or bank account details on our servers.
-              By making a purchase, you also agree to Razorpay's applicable
-              terms of use.
-            </p>
-          </section>
+  <h2 className="text-lg font-bold text-white mb-2">5. Payments</h2>
+  <p>
+    Payments for tickets and memberships may be collected either
+    through a secure third-party payment gateway, or via a
+    manual UPI/QR-code transfer that is verified by our team before
+    your ticket or membership is activated. We do not store your
+    card, UPI, or bank account details on our servers. If a
+    third-party payment gateway is used, you also agree to that
+    provider's applicable terms of use.
+  </p>
+</section>
 
           <section>
             <h2 className="text-lg font-bold text-white mb-2">6. Refunds & Cancellations</h2>

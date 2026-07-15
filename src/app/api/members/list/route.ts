@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     // Fetch all active memberships, oldest first, for serial numbering
     const { data: allMemberships, error } = await supabaseAdmin
       .from("memberships")
-      .select("id, user_id, name, manual_name, created_at, expires_at, status")
+      .select("id, user_id, manual_name, created_at, expires_at, status")
       .eq("status", "active")
       .order("created_at", { ascending: true });
 
@@ -63,7 +63,6 @@ export async function GET(req: NextRequest) {
       name:
         profilesMap.get(m.user_id)?.full_name ||
         m.manual_name ||
-        m.name ||
         `Member #${index + 1}`,
       membership_id: m.id.slice(0, 8).toUpperCase(),
     }));

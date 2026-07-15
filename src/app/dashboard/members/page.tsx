@@ -100,7 +100,7 @@ export default function DashboardMembersPage() {
         </button>
 
         <h1 className="text-3xl font-bold">Our Members</h1>
-        <p className="mt-2 text-gray-400">A community of {members.length + 11} members and counting.</p>
+        <p className="mt-2 text-gray-400">A community of {members.length} members and counting.</p>
 
         {featured.length > 0 && (
           <div className="mt-10">

@@ -54,20 +54,23 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-white mb-2">3. Third-Party Services</h2>
-            <p>We use trusted third-party services to operate our platform:</p>
-            <ul className="mt-2 list-disc list-inside space-y-1">
-              <li><span className="text-white font-medium">Supabase</span> — for account authentication and data storage</li>
-              <li><span className="text-white font-medium">Razorpay</span> — for secure payment processing</li>
-              <li><span className="text-white font-medium">Resend</span> — for sending transactional emails (confirmations, tickets, certificates)</li>
-              <li><span className="text-white font-medium">Google</span> — for optional "Sign in with Google" authentication</li>
-            </ul>
-            <p className="mt-2">
-              These providers only receive the information necessary to
-              perform their specific function and are bound by their own
-              privacy and security practices.
-            </p>
-          </section>
+  <h2 className="text-lg font-bold text-white mb-2">3. Third-Party Services</h2>
+  <p>We use trusted third-party services to operate our platform:</p>
+  <ul className="mt-2 list-disc list-inside space-y-1">
+    <li><span className="text-white font-medium">Supabase</span> — for account authentication and data storage</li>
+    <li><span className="text-white font-medium">Payment Gateway Provider</span> — for secure payment processing, when a third-party gateway is used for a transaction</li>
+    <li><span className="text-white font-medium">Resend</span> — for sending transactional emails (confirmations, tickets, certificates)</li>
+    <li><span className="text-white font-medium">Google</span> — for optional "Sign in with Google" authentication</li>
+  </ul>
+  <p className="mt-2">
+    Some payments may instead be collected via a manual UPI/QR-code
+    transfer, verified manually by our team using a payment
+    screenshot you provide. These providers and processes only
+    receive the information necessary to perform their specific
+    function and are bound by their own privacy and security
+    practices.
+  </p>
+</section>
 
           <section>
             <h2 className="text-lg font-bold text-white mb-2">4. Data Security</h2>
