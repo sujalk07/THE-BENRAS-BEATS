@@ -60,7 +60,7 @@ export default function ContactPage() {
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Based In</p>
-              <p className="mt-1 font-medium text-white">Varanasi, Uttar Pradesh, India</p>
+              <p className="mt-1 font-medium text-white">HG COMPLEX, Chitaipur - Chunar Rd, near Petrol pump, Kanchanpur Petrol Pump, Gokul Nagar, DLW Colony, Chitaipur, Kanchanpur, Varanasi, Uttar Pradesh 221004</p>
             </div>
           </div>
         </div>

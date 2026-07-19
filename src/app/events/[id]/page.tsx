@@ -527,14 +527,29 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             </ul>
 
             <label className="mt-5 flex items-start gap-2.5 text-sm text-gray-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={agreedToRules}
-                onChange={(e) => setAgreedToRules(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 accent-amber-500"
-              />
-              <span>I have read and agree to the ticket rules & regulations above.</span>
-            </label>
+  <input
+    type="checkbox"
+    checked={agreedToRules}
+    onChange={(e) => setAgreedToRules(e.target.checked)}
+    className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 accent-amber-500"
+  />
+  <span>I have read and agree to the ticket rules & regulations above.</span>
+</label>
+
+{!event?.isMember && (
+  <div className="mt-5 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+    <p className="text-xs leading-6 text-amber-100">
+      🔒 <span className="font-semibold">Secure Payment:</span>{" "}
+      The Benaras Beats is an initiative of{" "}
+      <strong>Changing Minds Counseling & Psychotherapy Centre</strong>.
+      Payments for event tickets are securely processed through Razorpay by
+      our parent organization. During checkout or on your bank statement,
+      you may see{" "}
+      <strong>Changing Minds Counseling & Psychotherapy Centre</strong> as
+      the merchant name.
+    </p>
+  </div>
+)}
 
             <div className="mt-6 flex gap-3">
               <button

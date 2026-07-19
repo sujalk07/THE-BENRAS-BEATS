@@ -28,7 +28,8 @@ export default function DashboardMembersPage() {
   const [featured, setFeatured] = useState<FeaturedMember[]>([]);
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const notAMember = !membership;
+
+  const isMember = !!membership;
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -37,19 +38,14 @@ export default function DashboardMembersPage() {
     }
 
     async function fetchMembers() {
-  if (!user || !membership) {
-    setLoading(false);
-    return;
-  }
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
-  try {
-    const res = await fetch(`/api/members/list?userId=${user.id}`);
-    const data = await res.json();
-
-    if (res.ok) {
-      setFeatured(data.featured ?? []);
-      setMembers(data.members ?? []);
-    }
+      try {
+        const res = await fetch(`/api/members/list?userId=${user.id}`);
+        const data = await res.json();
 
         if (res.ok) {
           setFeatured(data.featured ?? []);
@@ -63,33 +59,14 @@ export default function DashboardMembersPage() {
     }
 
     fetchMembers();
-}, [authLoading, membership, user]);
+  }, [authLoading, user]);
 
   if (authLoading || membershipLoading || loading) {
     return (
       <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center text-gray-400">
-        <Loader2 className="animate-spin mr-2" size={18} /> Loading...
+        <Loader2 className="animate-spin mr-2" size={18} />
+        Loading...
       </div>
-    );
-  }
-
-  if (notAMember) {
-    return (
-      <main className="min-h-screen bg-[#0B0C10] px-6 py-16 text-white">
-        <div className="mx-auto max-w-md text-center">
-          <Crown size={32} className="mx-auto text-gray-600" />
-          <h1 className="mt-4 text-xl font-bold">Members Only</h1>
-          <p className="mt-2 text-sm text-gray-400">
-            This page is exclusive to active members of The Benaras Beats.
-          </p>
-          <button
-            onClick={() => router.push("/membership")}
-            className="mt-6 rounded-xl bg-amber-500 px-6 py-3 text-sm font-bold text-black hover:bg-amber-400 transition"
-          >
-            Become a Member
-          </button>
-        </div>
-      </main>
     );
   }
 
@@ -106,13 +83,18 @@ export default function DashboardMembersPage() {
         </button>
 
         <h1 className="text-3xl font-bold">Our Members</h1>
-        <p className="mt-2 text-gray-400">A community of {members.length} members and counting.</p>
+
+        <p className="mt-2 text-gray-400">
+          A community of {members.length} members and counting.
+        </p>
 
         {featured.length > 0 && (
           <div className="mt-10">
-            <h2 className="mb-5 text-lg font-bold text-amber-400 flex items-center gap-2">
-              <Crown size={18} /> Esteemed Members
+            <h2 className="mb-5 flex items-center gap-2 text-lg font-bold text-amber-400">
+              <Crown size={18} />
+              Esteemed Members
             </h2>
+
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {featured.map((m) => (
                 <div
@@ -123,52 +105,135 @@ export default function DashboardMembersPage() {
                     <img
                       src={m.photo_url}
                       alt={m.name}
-                      className="h-20 w-20 rounded-full object-cover border-2 border-amber-500/30"
+                      className="h-20 w-20 rounded-full border-2 border-amber-500/30 object-cover"
                     />
                   ) : (
                     <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-amber-500/20 bg-amber-500/5 text-amber-500/40">
                       <User size={28} />
                     </div>
                   )}
-                  <h3 className="mt-4 font-bold text-white">{m.name}</h3>
+
+                  <h3 className="mt-4 font-bold text-white">
+                    {m.name}
+                  </h3>
+
                   {m.profession && (
                     <p className="mt-0.5 text-xs uppercase tracking-wide text-amber-400">
                       {m.profession}
                     </p>
                   )}
+
                   {m.details && (
-                    <p className="mt-3 text-sm leading-relaxed text-gray-400">{m.details}</p>
+                    <p className="mt-3 text-sm leading-relaxed text-gray-400">
+                      {m.details}
+                    </p>
                   )}
                 </div>
               ))}
             </div>
           </div>
         )}
+                <div className="mt-12">
+          <h2 className="mb-4 text-lg font-bold text-white">
+            Community Members
+          </h2>
 
-        <div className="mt-12">
-          <h2 className="mb-4 text-lg font-bold text-white">All Members</h2>
-          {members.length === 0 ? (
-            <p className="text-sm text-gray-500">No members yet.</p>
-          ) : (
-            <div className="overflow-hidden rounded-xl border border-white/10">
-              <table className="w-full text-sm">
-                <thead className="bg-white/[0.03] text-left text-gray-400">
-                  <tr>
-                    <th className="px-4 py-3 font-medium w-16">S.No.</th>
-                    <th className="px-4 py-3 font-medium">Name</th>
-                    <th className="px-4 py-3 font-medium">Membership ID</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {members.map((m) => (
-                    <tr key={m.membership_id}>
-                      <td className="px-4 py-3 text-gray-400">{m.serial}</td>
-                      <td className="px-4 py-3 font-medium text-white">{m.name}</td>
-                      <td className="px-4 py-3 font-mono text-amber-400">{m.membership_id}</td>
+          {isMember ? (
+            members.length === 0 ? (
+              <p className="text-sm text-gray-500">No members yet.</p>
+            ) : (
+              <div className="overflow-hidden rounded-xl border border-white/10">
+                <table className="w-full text-sm">
+                  <thead className="bg-white/[0.03] text-left text-gray-400">
+                    <tr>
+                      <th className="w-16 px-4 py-3 font-medium">S.No.</th>
+                      <th className="px-4 py-3 font-medium">Name</th>
+                      <th className="px-4 py-3 font-medium">
+                        Membership ID
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+
+                  <tbody className="divide-y divide-white/5">
+                    {members.map((m) => (
+                      <tr key={m.membership_id}>
+                        <td className="px-4 py-3 text-gray-400">
+                          {m.serial}
+                        </td>
+
+                        <td className="px-4 py-3 font-medium text-white">
+                          {m.name}
+                        </td>
+
+                        <td className="px-4 py-3 font-mono text-amber-400">
+                          {m.membership_id}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
+          ) : (
+            <div className="rounded-3xl border border-amber-500/20 bg-gradient-to-b from-amber-500/10 to-transparent p-10 text-center">
+
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10">
+                <Crown className="text-amber-400" size={30} />
+              </div>
+
+              <h3 className="mt-6 text-2xl font-bold text-white">
+                Unlock the Members Directory
+              </h3>
+
+              <p className="mx-auto mt-4 max-w-2xl text-gray-400 leading-7">
+                Become a member of <span className="font-semibold text-white">
+                  The Benaras Beats
+                </span>{" "}
+                and join a vibrant community of artists, performers, music
+                lovers, professionals, and changemakers. Members enjoy priority
+                event access, exclusive experiences, meaningful connections,
+                and full access to our community directory.
+              </p>
+
+              <div className="mt-8 grid gap-4 sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                  <p className="text-3xl">🎵</p>
+                  <h4 className="mt-3 font-semibold">
+                    Exclusive Events
+                  </h4>
+                  <p className="mt-2 text-sm text-gray-400">
+                    Priority entry and member-only experiences.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                  <p className="text-3xl">🤝</p>
+                  <h4 className="mt-3 font-semibold">
+                    Networking
+                  </h4>
+                  <p className="mt-2 text-sm text-gray-400">
+                    Connect with fellow members, artists and creators.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                  <p className="text-3xl">✨</p>
+                  <h4 className="mt-3 font-semibold">
+                    Community Access
+                  </h4>
+                  <p className="mt-2 text-sm text-gray-400">
+                    View the complete members directory and future member
+                    benefits.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => router.push("/membership")}
+                className="mt-10 rounded-xl bg-amber-500 px-8 py-3 text-sm font-bold text-black transition hover:bg-amber-400"
+              >
+                Become a Member
+              </button>
             </div>
           )}
         </div>

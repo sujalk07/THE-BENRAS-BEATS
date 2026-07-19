@@ -27,7 +27,7 @@ export default function Footer() {
 
           <div className="flex items-center gap-4">
             <a
-              href="#"
+              href="https://www.instagram.com/thebenarasbeats?igsh=MXZzMjRldHFzbzFqdQ=="
               aria-label="Instagram"
               className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-900/40 border border-gray-800/80 text-gray-400 hover:text-amber-400 hover:border-amber-500/30 hover:shadow-[0_0_15px_rgba(245,158,11,0.1)] transition-all duration-300"
             >
@@ -50,6 +50,8 @@ export default function Footer() {
           </div>
         </div>
 
+
+
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 text-xs text-gray-500 tracking-wide">
           <p>© {currentYear} The Benaras Beats. All rights reserved.</p>
 
@@ -58,7 +60,9 @@ export default function Footer() {
             <a href="/terms" className="hover:text-gray-300 transition-colors">Terms &amp; Conditions</a>
             <a href="/privacy" className="hover:text-gray-300 transition-colors">Privacy Policy</a>
             <a href="/refund-policy" className="hover:text-gray-300 transition-colors">Refund Policy</a>
+            <a href="/delivery-policy" className="hover:text-gray-300 transition-colors">Delivery Policy</a>
             <a href="/contact" className="hover:text-gray-300 transition-colors">Contact Us</a>
+
           </div>
         </div>
       </div>

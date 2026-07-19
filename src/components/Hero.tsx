@@ -152,7 +152,7 @@ const handleClaimTicket = async () => {
       <div className="relative mx-auto max-w-7xl w-full px-6 sm:px-8 py-24 z-20">
         <div className="max-w-3xl flex flex-col justify-center">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.35em] text-amber-300/80 md:text-sm">
-            MUSIC • CULTURE • COMMUNITY
+            MUSIC • WELLNESS • COMMUNITY
           </p>
 
           <p
@@ -163,20 +163,18 @@ const handleClaimTicket = async () => {
           </p>
 
           <h1
-            className="text-4xl font-bold leading-[1.15] text-white sm:text-6xl lg:text-7xl tracking-tight"
+            className="text-4xl mt-2 font-bold leading-[1.15] text-white sm:text-6xl lg:text-7xl tracking-tight"
             style={{ fontFamily: "var(--font-playfair), serif" }}
           >
             Where Music
             <span className="block text-amber-400 mt-1">
-              Finds Its Soul
+              Heals, Connects & Inspires
             </span>
           </h1>
 
           <p className="mt-6 max-w-xl text-base leading-relaxed text-gray-300/90 sm:text-lg">
-            A vibrant community celebrating music, culture, and hidden talent.
-            Join performances, connect with artists, and become part of
-            unforgettable musical experiences that inspire, uplift, and bring
-            people together.
+            Where music becomes a journey of connection, wellbeing, and culture. The Benaras Beats brings people together through soulful performances 
+            that inspire, uplift, and celebrate the timeless spirit of Banaras.
           </p>
 
           <div className="mt-10 flex flex-wrap gap-5 items-center">

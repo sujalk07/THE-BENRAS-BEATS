@@ -28,10 +28,7 @@ const cormorant = Cormorant_Garamond({
   weight: ["400", "600", "700"],
 });
 
-// Toggle this to true once Razorpay live mode is approved and ready
 const MEMBERSHIPS_ENABLED = false;
-
-// Amount for the manual QR-payment flow (shown while MEMBERSHIPS_ENABLED is false)
 const QR_MEMBERSHIP_AMOUNT = 4999;
 
 const tiers = [
@@ -40,7 +37,8 @@ const tiers = [
     id: "intro",
     price: "₹4,999",
     frequency: "6 months",
-    description: "Special introductory offer for the first 50 members only.",
+    description:
+      "Limited-time introductory offer. Secure your membership before this special price ends.",
     features: [
       "6 Months Membership",
       "Priority access to all Benaras Beats events",
@@ -56,7 +54,8 @@ const tiers = [
     id: "regular",
     price: "₹6,000",
     frequency: "6 months",
-    description: "Regular membership with all premium benefits. Available anytime.",
+    description:
+      "Enjoy full membership benefits with priority access to events, exclusive experiences, and community privileges.",
     features: [
       "6 Months Membership",
       "Priority access to all Benaras Beats events",
@@ -78,7 +77,6 @@ const MEMBERSHIP_RULES = [
   "Members must carry valid ID matching their registered account when attending events.",
 ];
 
-// Status of the current user's manual QR-payment submission / membership
 type MyStatus =
   | { status: "loading" }
   | { status: "none" }
@@ -92,8 +90,6 @@ export default function MembershipPage() {
   const router = useRouter();
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
-  const [soldOut, setSoldOut] = useState(false);
-  const [slotsLeft, setSlotsLeft] = useState(50);
   const [pageLoading, setPageLoading] = useState(true);
   const [subscribingPlan, setSubscribingPlan] = useState<"intro" | "regular" | null>(null);
 
@@ -101,7 +97,6 @@ export default function MembershipPage() {
   const [pendingPlan, setPendingPlan] = useState<"intro" | "regular" | null>(null);
   const [agreedToRules, setAgreedToRules] = useState(false);
 
-  // ---- QR-payment manual flow state (replaces the old waitlist state) ----
   const [myStatus, setMyStatus] = useState<MyStatus>({ status: "loading" });
   const [fullName, setFullName] = useState("");
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
@@ -116,23 +111,11 @@ export default function MembershipPage() {
   }, [user]);
 
   useEffect(() => {
-    if (!MEMBERSHIPS_ENABLED) {
-      setPageLoading(false);
-      return;
-    }
-    fetch("/api/membership-status")
-      .then((res) => res.json())
-      .then((data) => {
-        setSoldOut(data.isIntroSoldOut);
-        setSlotsLeft(data.slotsRemaining);
-      })
-      .catch((err) => console.error("Error fetching system availability configuration states:", err))
-      .finally(() => setPageLoading(false));
+    setPageLoading(false);
   }, []);
 
-  // Fetch the current user's QR-payment request / membership status
   useEffect(() => {
-    if (MEMBERSHIPS_ENABLED) return; // only needed while the manual flow is active
+    if (MEMBERSHIPS_ENABLED) return;
     if (!user) {
       setMyStatus({ status: "none" });
       return;
@@ -201,11 +184,6 @@ export default function MembershipPage() {
     d ? new Date(d).toLocaleDateString("en-IN", { dateStyle: "long" }) : "—";
 
   const handleSubscribeClick = (plan: "intro" | "regular") => {
-    if (plan === "intro" && soldOut) {
-      alert("This offer has expired!");
-      return;
-    }
-
     if (!user) {
       router.push(`/login?redirect=/membership&plan=${plan}`);
       return;
@@ -315,10 +293,6 @@ export default function MembershipPage() {
     );
   }
 
-  // ============================================================
-  // MEMBERSHIPS DISABLED — show QR-code + payment-proof form instead
-  // (this replaces the old "notify me" waitlist)
-  // ============================================================
   if (!MEMBERSHIPS_ENABLED) {
     return (
       <div className="min-h-screen bg-[#0B0C10] px-4 py-6">
@@ -340,7 +314,6 @@ export default function MembershipPage() {
             community, and exclusive experiences.
           </p>
 
-          {/* Signed out */}
           {!user && myStatus.status === "none" && (
             <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-8 text-center">
               <LogIn className="mx-auto mb-4 text-amber-400" size={28} />
@@ -360,7 +333,6 @@ export default function MembershipPage() {
             </div>
           )}
 
-          {/* Active member */}
           {user && isMember && membership && (
             <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-8 text-center">
               <CheckCircle2 className="mx-auto mb-4 text-emerald-400" size={28} />
@@ -371,7 +343,6 @@ export default function MembershipPage() {
             </div>
           )}
 
-          {/* Pending review */}
           {user && myStatus.status === "pending" && (
             <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-8 text-center">
               <Clock className="mx-auto mb-4 text-amber-400" size={28} />
@@ -383,7 +354,6 @@ export default function MembershipPage() {
             </div>
           )}
 
-          {/* Rejected — show reason, form reappears below to resubmit */}
           {user && myStatus.status === "rejected" && (
             <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300 flex items-start gap-2">
               <XCircle size={16} className="mt-0.5 shrink-0" />
@@ -394,17 +364,13 @@ export default function MembershipPage() {
             </div>
           )}
 
-          {/* Form — shown when signed in and not active/pending */}
-          {user &&
- !isMember &&
- (myStatus.status === "none" || myStatus.status === "rejected") && (
+          {user && !isMember && (myStatus.status === "none" || myStatus.status === "rejected") && (
             <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 sm:p-8">
               <div className="text-center mb-6">
                 <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3">
                   Step 1 — Scan &amp; Pay
                 </p>
                 <div className="mx-auto w-48 h-48 rounded-xl overflow-hidden border border-white/10 bg-white p-2">
-                  {/* Replace /assets/payment-qr.png with your actual QR code image */}
                   <Image
                     src={qrimage}
                     alt="Payment QR Code"
@@ -482,9 +448,6 @@ export default function MembershipPage() {
     );
   }
 
-  // ============================================================
-  // MEMBERSHIPS ENABLED — normal Razorpay purchase flow (unchanged)
-  // ============================================================
   return (
     <>
       <Script
@@ -514,39 +477,31 @@ export default function MembershipPage() {
           <div className="mx-auto grid max-w-lg grid-cols-1 gap-y-6 lg:max-w-4xl lg:grid-cols-2 lg:gap-x-8">
             {tiers.map((tier) => {
               const IconComponent = tier.icon;
-              const isIntroCard = tier.id === "intro";
-              const isCardDisabled = isIntroCard && soldOut;
               const isBusy = subscribingPlan === tier.id;
 
               return (
                 <div
                   key={tier.id}
                   className={`relative flex flex-col justify-between rounded-3xl p-8 ring-1 transition-all duration-300 ${
-                    isCardDisabled
-                      ? "opacity-40 pointer-events-none ring-white/5 bg-gray-900/20"
-                      : tier.mostPopular
+                    tier.mostPopular
                       ? "bg-gradient-to-b from-amber-500/10 to-transparent ring-amber-500/50 hover:scale-[1.02]"
                       : "bg-white/[0.02] ring-white/10 hover:ring-white/20 hover:scale-[1.02]"
                   }`}
                 >
-                  {tier.mostPopular && !isCardDisabled && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold tracking-wider text-black uppercase">
-                      Intro Offer
+                  {tier.mostPopular && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold tracking-wider text-black uppercase shadow-lg">
+                      Limited Time
                     </span>
                   )}
 
                   <div>
                     <div className="flex items-center justify-between">
-                      <h3
-                        className={`${cormorant.className} text-2xl font-bold text-white ${
-                          isCardDisabled ? "line-through text-gray-500" : ""
-                        }`}
-                      >
+                      <h3 className={`${cormorant.className} text-2xl font-bold text-white`}>
                         {tier.name}
                       </h3>
 
                       <IconComponent
-                        className={tier.mostPopular && !isCardDisabled ? "text-amber-400" : "text-gray-400"}
+                        className={tier.mostPopular ? "text-amber-400" : "text-gray-400"}
                         size={24}
                       />
                     </div>
@@ -554,50 +509,56 @@ export default function MembershipPage() {
                     <p className="mt-4 text-sm text-gray-400">{tier.description}</p>
 
                     <p className="mt-6 flex items-baseline gap-x-1">
-                      <span className={`text-5xl font-bold text-white ${isCardDisabled ? "text-gray-500" : ""}`}>
-                        {tier.price}
-                      </span>
+                      <span className="text-5xl font-bold text-white">{tier.price}</span>
                       <span className="text-sm text-gray-400">/{tier.frequency}</span>
                     </p>
 
-                    {isIntroCard && (
-                      <div
-                        className={`mt-3 rounded-lg border p-3 ${
-                          isCardDisabled ? "bg-red-500/10 border-red-500/20" : "bg-amber-500/10 border-amber-500/30"
-                        }`}
-                      >
-                        <p className={`text-sm font-medium ${isCardDisabled ? "text-red-400" : "text-amber-300"}`}>
-                          {isCardDisabled
-                            ? "❌ All 50 early bird slots have been claimed."
-                            : `🔥 Only ${slotsLeft} introductory slots remaining!`}
+                    {tier.id === "intro" && (
+                      <div className="mt-3 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-yellow-500/5 p-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">⚡</span>
+                          <p className="text-sm font-semibold text-amber-300">
+                            Limited-Time Introductory Offer
+                          </p>
+                        </div>
+
+                        <p className="mt-2 text-xs leading-5 text-gray-300">
+                          Join now and enjoy our special launch pricing. This promotional offer
+                          will end soon, after which memberships will be available only at the
+                          regular price.
                         </p>
                       </div>
                     )}
 
                     {tier.id === "regular" && (
-                      <div className="mt-3 rounded-lg bg-white/5 border border-white/10 p-3">
-                        <p className="text-sm font-medium text-gray-300">Available all year round.</p>
+                      <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-4">
+                        <p className="text-sm font-semibold text-white">Full Membership Access</p>
+
+                        <p className="mt-2 text-xs leading-5 text-gray-400">
+                          Continue enjoying all premium benefits at our regular membership price
+                          with uninterrupted access to the Benaras Beats community.
+                        </p>
                       </div>
                     )}
 
                     <ul className="mt-8 space-y-3 text-sm text-gray-300">
                       {tier.features.map((feature) => (
                         <li key={feature} className="flex items-center gap-x-3">
-                          <Check className={`h-5 w-5 flex-none ${isCardDisabled ? "text-gray-600" : "text-amber-400"}`} />
-                          <span className={isCardDisabled ? "text-gray-500" : ""}>{feature}</span>
+                          <Check className="h-5 w-5 flex-none text-amber-400" />
+                          <span>{feature}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
 
                   <button
-                    disabled={isCardDisabled || isBusy || isMember}
+                    disabled={isBusy || isMember}
                     onClick={() => {
-    if (isMember) return;
-    handleSubscribeClick(tier.id as "intro" | "regular");
-}}
+                      if (isMember) return;
+                      handleSubscribeClick(tier.id as "intro" | "regular");
+                    }}
                     className={`mt-8 rounded-xl px-4 py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
-                      isCardDisabled || isBusy || isMember
+                      isBusy || isMember
                         ? "bg-gray-800 text-gray-500 cursor-not-allowed"
                         : tier.mostPopular
                         ? "bg-amber-500 text-black hover:bg-amber-400"
@@ -605,28 +566,77 @@ export default function MembershipPage() {
                     }`}
                   >
                     {isBusy ? (
-  <>
-    <Loader2 size={16} className="animate-spin" />
-    Processing...
-  </>
-) : isMember ? (
-  `Member until ${formatDate(membership?.expires_at)}`
-) : isCardDisabled ? (
-  "Sold Out"
-) : user ? (
-  "Become a Member"
-) : (
-  "Login to Continue"
-)}
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Processing...
+                      </>
+                    ) : isMember ? (
+                      `Member until ${formatDate(membership?.expires_at)}`
+                    ) : user ? (
+                      tier.id === "intro"
+                        ? "Claim Introductory Offer"
+                        : "Become a Member"
+                    ) : (
+                      "Login to Continue"
+                    )}
                   </button>
                 </div>
               );
             })}
           </div>
+
+          <div className="mx-auto mt-10 max-w-3xl rounded-3xl border border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-yellow-500/5 to-transparent p-8 text-center">
+            <p className="text-xs uppercase tracking-[0.3em] text-amber-400 font-semibold">
+              LIMITED-TIME MEMBERSHIP OFFER
+            </p>
+
+            <h2 className={`${cormorant.className} mt-3 text-3xl sm:text-4xl font-bold text-white`}>
+              Become a Founding Member
+            </h2>
+
+            <p className="mt-4 text-gray-300 leading-7 max-w-2xl mx-auto">
+              Join The Benaras Beats community today and enjoy exclusive member experiences,
+              priority event access, and special privileges at our introductory membership price.
+              This promotional offer will conclude soon.
+            </p>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+                <p className="text-2xl">🎵</p>
+                <h3 className="mt-3 font-semibold text-white">Exclusive Events</h3>
+                <p className="mt-2 text-sm text-gray-400">
+                  Priority access to our music experiences.
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+                <p className="text-2xl">🤝</p>
+                <h3 className="mt-3 font-semibold text-white">Community</h3>
+                <p className="mt-2 text-sm text-gray-400">
+                  Connect with artists and fellow music lovers.
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+                <p className="text-2xl">✨</p>
+                <h3 className="mt-3 font-semibold text-white">Member Benefits</h3>
+                <p className="mt-2 text-sm text-gray-400">
+                  Enjoy exclusive experiences and future perks.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-8 rounded-2xl border border-amber-500/20 bg-black/20 p-5">
+              <p className="text-lg font-semibold text-amber-300">⏳ Offer Ending Soon</p>
+              <p className="mt-2 text-sm text-gray-300 leading-6">
+                Secure your membership today at our introductory price before regular pricing
+                becomes applicable.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Membership Rules Modal */}
       {showRulesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1f232d] p-6 shadow-2xl">
@@ -659,6 +669,16 @@ export default function MembershipPage() {
               />
               <span>I have read and agree to the membership rules above.</span>
             </label>
+
+            <div className="mt-5 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+              <p className="text-xs leading-6 text-amber-100">
+                🔒 <span className="font-semibold">Secure Payment:</span> Payments for{" "}
+                <strong>The Benaras Beats</strong> are securely processed through Razorpay by{" "}
+                <strong>Changing Minds Counseling & Psychotherapy Centre</strong>, our parent
+                organization. During checkout or on your bank statement, the merchant name may
+                appear as <strong>Changing Minds Counseling & Psychotherapy Centre</strong>.
+              </p>
+            </div>
 
             <div className="mt-6 flex gap-3">
               <button
