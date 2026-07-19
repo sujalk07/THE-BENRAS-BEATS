@@ -586,7 +586,7 @@ export default function MembershipPage() {
             })}
           </div>
 
-          {user && (
+          {user && isMember && (
             <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-center">
               <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold">
                 Community of Members
