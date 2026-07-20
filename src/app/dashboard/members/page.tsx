@@ -175,7 +175,7 @@ export default function DashboardMembersPage() {
             <h3 className="mt-6 text-2xl font-bold text-white">Be a Part of the Community</h3>
 
             <p className="mx-auto mt-4 max-w-md text-gray-400 leading-7">
-              Join <span className="font-semibold text-white">{totalCount}+ members</span> of
+              Join <span className="font-semibold text-white">{totalCount - 1}+ members</span> of
               The Benaras Beats and become part of our growing community.
             </p>
 
