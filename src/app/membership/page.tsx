@@ -29,7 +29,7 @@ const cormorant = Cormorant_Garamond({
 });
 
 // Toggle this to true once Razorpay live mode is approved and ready
-const MEMBERSHIPS_ENABLED = false;
+const MEMBERSHIPS_ENABLED = true;
 
 // Amount for the manual QR-payment flow (shown while MEMBERSHIPS_ENABLED is false)
 const QR_MEMBERSHIP_AMOUNT = 4999;
@@ -94,8 +94,6 @@ export default function MembershipPage() {
   const router = useRouter();
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
-  const [soldOut, setSoldOut] = useState(false);
-  const [slotsLeft, setSlotsLeft] = useState(50);
   const [pageLoading, setPageLoading] = useState(true);
   const [subscribingPlan, setSubscribingPlan] = useState<"intro" | "regular" | null>(null);
 
@@ -118,18 +116,7 @@ export default function MembershipPage() {
   }, [user]);
 
   useEffect(() => {
-    if (!MEMBERSHIPS_ENABLED) {
-      setPageLoading(false);
-      return;
-    }
-    fetch("/api/membership-status")
-      .then((res) => res.json())
-      .then((data) => {
-        setSoldOut(data.isIntroSoldOut);
-        setSlotsLeft(data.slotsRemaining);
-      })
-      .catch((err) => console.error("Error fetching system availability configuration states:", err))
-      .finally(() => setPageLoading(false));
+    setPageLoading(false);
   }, []);
 
   // Fetch the current user's QR-payment request / membership status
@@ -203,11 +190,6 @@ export default function MembershipPage() {
     d ? new Date(d).toLocaleDateString("en-IN", { dateStyle: "long" }) : "—";
 
   const handleSubscribeClick = (plan: "intro" | "regular") => {
-    if (plan === "intro" && soldOut) {
-      alert("This offer has expired!");
-      return;
-    }
-
     if (!user) {
       router.push(`/login?redirect=/membership&plan=${plan}`);
       return;
@@ -517,36 +499,31 @@ export default function MembershipPage() {
             {tiers.map((tier) => {
               const IconComponent = tier.icon;
               const isIntroCard = tier.id === "intro";
-              const isCardDisabled = isIntroCard && soldOut;
               const isBusy = subscribingPlan === tier.id;
 
               return (
                 <div
                   key={tier.id}
                   className={`relative flex flex-col justify-between rounded-3xl p-8 ring-1 transition-all duration-300 ${
-                    isCardDisabled
-                      ? "opacity-40 pointer-events-none ring-white/5 bg-gray-900/20"
-                      : tier.mostPopular
+                    tier.mostPopular
                       ? "bg-gradient-to-b from-amber-500/10 to-transparent ring-amber-500/50 hover:scale-[1.02]"
                       : "bg-white/[0.02] ring-white/10 hover:ring-white/20 hover:scale-[1.02]"
                   }`}
                 >
                   {tier.mostPopular && (
-  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold tracking-wider text-black uppercase shadow-lg">
-    Limited Time
-  </span>
-)}
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold tracking-wider text-black uppercase shadow-lg">
+                      Limited Time
+                    </span>
+                  )}
 
                   <div>
                     <div className="flex items-center justify-between">
-                      <h3
-  className={`${cormorant.className} text-2xl font-bold text-white`}
->
-  {tier.name}
-</h3>
+                      <h3 className={`${cormorant.className} text-2xl font-bold text-white`}>
+                        {tier.name}
+                      </h3>
 
                       <IconComponent
-                        className={tier.mostPopular && !isCardDisabled ? "text-amber-400" : "text-gray-400"}
+                        className={tier.mostPopular ? "text-amber-400" : "text-gray-400"}
                         size={24}
                       />
                     </div>
@@ -554,84 +531,79 @@ export default function MembershipPage() {
                     <p className="mt-4 text-sm text-gray-400">{tier.description}</p>
 
                     <p className="mt-6 flex items-baseline gap-x-1">
-                     <span className="text-5xl font-bold text-white">
-  {tier.price}
-</span>
+                      <span className="text-5xl font-bold text-white">{tier.price}</span>
                       <span className="text-sm text-gray-400">/{tier.frequency}</span>
                     </p>
 
                     {isIntroCard && (
-  <div className="mt-3 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-yellow-500/5 p-4">
-    <div className="flex items-center gap-2">
-      <span className="text-lg">⚡</span>
-      <p className="text-sm font-semibold text-amber-300">
-        Limited-Time Introductory Offer
-      </p>
-    </div>
+                      <div className="mt-3 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-yellow-500/5 p-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">⚡</span>
+                          <p className="text-sm font-semibold text-amber-300">
+                            Limited-Time Introductory Offer
+                          </p>
+                        </div>
 
-    <p className="mt-2 text-xs leading-5 text-gray-300">
-      Join now and enjoy our special launch pricing. This promotional offer
-      will end soon, after which memberships will be available only at the
-      regular price.
-    </p>
-  </div>
-)}
+                        <p className="mt-2 text-xs leading-5 text-gray-300">
+                          Join now and enjoy our special launch pricing. This promotional offer
+                          will end soon, after which memberships will be available only at the
+                          regular price.
+                        </p>
+                      </div>
+                    )}
 
                     {tier.id === "regular" && (
-  <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-4">
-    <p className="text-sm font-semibold text-white">
-      Full Membership Access
-    </p>
+                      <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-4">
+                        <p className="text-sm font-semibold text-white">
+                          Full Membership Access
+                        </p>
 
-    <p className="mt-2 text-xs leading-5 text-gray-400">
-      Continue enjoying all premium benefits at our regular membership price
-      with uninterrupted access to the Benaras Beats community.
-    </p>
-  </div>
-)}
+                        <p className="mt-2 text-xs leading-5 text-gray-400">
+                          Continue enjoying all premium benefits at our regular membership price
+                          with uninterrupted access to the Benaras Beats community.
+                        </p>
+                      </div>
+                    )}
 
                     <ul className="mt-8 space-y-3 text-sm text-gray-300">
                       {tier.features.map((feature) => (
                         <li key={feature} className="flex items-center gap-x-3">
-                          <Check
-  className="h-5 w-5 flex-none text-amber-400"
-/>
-
-<span>{feature}</span>
+                          <Check className="h-5 w-5 flex-none text-amber-400" />
+                          <span>{feature}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
 
                   <button
-  disabled={isBusy || isMember}
-  onClick={() => {
-    if (isMember) return;
-    handleSubscribeClick(tier.id as "intro" | "regular");
-  }}
-  className={`mt-8 rounded-xl px-4 py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
-    isBusy || isMember
-      ? "bg-gray-800 text-gray-500 cursor-not-allowed"
-      : tier.mostPopular
-      ? "bg-amber-500 text-black hover:bg-amber-400"
-      : "bg-white/10 text-white hover:bg-white/20"
-  }`}
->
-  {isBusy ? (
-    <>
-      <Loader2 size={16} className="animate-spin" />
-      Processing...
-    </>
-  ) : isMember ? (
-    `Member until ${formatDate(membership?.expires_at)}`
-  ) : user ? (
-    tier.id === "intro"
-      ? "Claim Introductory Offer"
-      : "Become a Member"
-  ) : (
-    "Login to Continue"
-  )}
-</button>
+                    disabled={isBusy || isMember}
+                    onClick={() => {
+                      if (isMember) return;
+                      handleSubscribeClick(tier.id as "intro" | "regular");
+                    }}
+                    className={`mt-8 rounded-xl px-4 py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+                      isBusy || isMember
+                        ? "bg-gray-800 text-gray-500 cursor-not-allowed"
+                        : tier.mostPopular
+                        ? "bg-amber-500 text-black hover:bg-amber-400"
+                        : "bg-white/10 text-white hover:bg-white/20"
+                    }`}
+                  >
+                    {isBusy ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Processing...
+                      </>
+                    ) : isMember ? (
+                      `Member until ${formatDate(membership?.expires_at)}`
+                    ) : user ? (
+                      tier.id === "intro"
+                        ? "Claim Introductory Offer"
+                        : "Become a Member"
+                    ) : (
+                      "Login to Continue"
+                    )}
+                  </button>
                 </div>
               );
             })}
@@ -673,18 +645,18 @@ export default function MembershipPage() {
               <span>I have read and agree to the membership rules above.</span>
             </label>
 
-              <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
-  <p className="text-xs leading-5 text-amber-100">
-    🔒 <span className="font-semibold">Secure Payment:</span> Payments for
-    <span className="font-semibold"> The Benaras Beats</span> are securely
-    processed through Razorpay by
-    <span className="font-semibold">
-      {" "}Changing Minds Counseling & Psychotherapy Centre
-    </span>
-    , our parent organization. You may see this name as the merchant during
-    checkout or on your bank statement.
-  </p>
-</div>
+            <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+              <p className="text-xs leading-5 text-amber-100">
+                🔒 <span className="font-semibold">Secure Payment:</span> Payments for
+                <span className="font-semibold"> The Benaras Beats</span> are securely
+                processed through Razorpay by
+                <span className="font-semibold">
+                  {" "}Changing Minds Counseling & Psychotherapy Centre
+                </span>
+                , our parent organization. You may see this name as the merchant during
+                checkout or on your bank statement.
+              </p>
+            </div>
             <div className="mt-6 flex gap-3">
               <button
                 onClick={() => setShowRulesModal(false)}

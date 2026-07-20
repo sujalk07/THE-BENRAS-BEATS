@@ -13,6 +13,13 @@ export async function POST(request: Request) {
       userId,
     } = await request.json();
 
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !userId) {
+      return NextResponse.json(
+        { error: "Missing required payment verification fields." },
+        { status: 400 }
+      );
+    }
+
     // Verify Razorpay Signature
     const body = `${razorpay_order_id}|${razorpay_payment_id}`;
 
@@ -39,6 +46,14 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Membership order not found." },
         { status: 404 }
+      );
+    }
+
+    // 🔒 SECURITY: Ensure the order actually belongs to the requesting user.
+    if (order.user_id !== userId) {
+      return NextResponse.json(
+        { error: "This order does not belong to the specified user." },
+        { status: 403 }
       );
     }
 
@@ -69,22 +84,23 @@ export async function POST(request: Request) {
       throw orderUpdateError;
     }
 
+    // Fetch the auth user once, reused for email + certificate below
+    const { data: authUserResult, error: authUserError } =
+      await supabaseAdmin.auth.admin.getUserById(userId);
+
+    if (authUserError || !authUserResult?.user?.email) {
+      throw new Error("User email not found.");
+    }
+
+    const userEmail = authUserResult.user.email.toLowerCase();
+
     // Check if membership already exists
-    const { data: authUser } =
-  await supabaseAdmin.auth.admin.getUserById(userId);
-
-const userEmail = authUser.user?.email?.toLowerCase();
-
-if (!userEmail) {
-  throw new Error("User email not found.");
-}
-
-const { data: existingMembership } = await supabaseAdmin
-  .from("memberships")
-  .select("id")
-  .eq("email", userEmail)
-  .eq("status", "active")
-  .maybeSingle();
+    const { data: existingMembership } = await supabaseAdmin
+      .from("memberships")
+      .select("id")
+      .eq("email", userEmail)
+      .eq("status", "active")
+      .maybeSingle();
 
     if (existingMembership) {
       return NextResponse.json({
@@ -93,89 +109,66 @@ const { data: existingMembership } = await supabaseAdmin
       });
     }
 
-    // 🚨 CONCURRENCY GUARD: Final check before consuming an intro offer slot
-    // if (order.is_intro_offer) {
-    //   const { count, error: finalCountError } = await supabaseAdmin
-    //     .from("memberships")
-    //     .select("*", { count: "exact", head: true })
-    //     .eq("is_intro_offer", true);
-
-    //   if (finalCountError) throw finalCountError;
-
-    //   if ((count ?? 0) >= 50) {
-    //     return NextResponse.json(
-    //       { 
-    //         error: "We are deeply sorry! The last introductory membership spot was filled while your transaction was processing. Please contact support for an immediate refund." 
-    //       },
-    //       { status: 400 }
-    //     );
-    //   }
-    // }
-
-
     const { error: razorpayMembershipError } = await supabaseAdmin
-  .from("razorpay_based_membership")
-  .insert({
-    email: userEmail,
-    razorpay_order_id,
-    razorpay_payment_id,
-    amount: order.amount,
-    is_intro_offer: order.is_intro_offer,
-    status: "paid",
-    starts_at: startsAt.toISOString(),
-    expires_at: expiresAt.toISOString(),
-    paid_at: new Date().toISOString(),
-  });
+      .from("razorpay_based_membership")
+      .insert({
+        email: userEmail,
+        razorpay_order_id,
+        razorpay_payment_id,
+        amount: order.amount,
+        is_intro_offer: order.is_intro_offer,
+        status: "paid",
+        starts_at: startsAt.toISOString(),
+        expires_at: expiresAt.toISOString(),
+        paid_at: new Date().toISOString(),
+      });
 
-if (razorpayMembershipError) {
-  throw razorpayMembershipError;
-}
+    if (razorpayMembershipError) {
+      throw razorpayMembershipError;
+    }
 
-await supabaseAdmin
-  .from("profiles")
-  .update({
-    membership_status: "active",
-  })
-  .eq("id", userId);
+    await supabaseAdmin
+      .from("profiles")
+      .update({
+        membership_status: "active",
+      })
+      .eq("id", userId);
+
     // Create Membership
     const { error: membershipError } = await supabaseAdmin
       .from("memberships")
       .insert({
-  email: userEmail,
-  amount: order.amount,
-  status: "active",
-  starts_at: startsAt.toISOString(),
-  expires_at: expiresAt.toISOString(),
-  created_with: "razorpay",
-})
+        email: userEmail,
+        amount: order.amount,
+        status: "active",
+        starts_at: startsAt.toISOString(),
+        expires_at: expiresAt.toISOString(),
+        created_with: "razorpay",
+      });
 
     if (membershipError) {
       throw membershipError;
     }
-
-    // Update Profile
 
     // ==========================
     // Generate & email the membership certificate
     // (Non-blocking failure — membership is already active regardless of email outcome)
     // ==========================
     try {
-      const [{ data: profile }, { data: authUser }] = await Promise.all([
-        supabaseAdmin.from("profiles").select("full_name").eq("id", userId).maybeSingle(),
-        supabaseAdmin.auth.admin.getUserById(userId),
-      ]);
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("full_name")
+        .eq("id", userId)
+        .maybeSingle();
 
       const memberName = profile?.full_name ?? "Valued Member";
-      const userEmail = authUser?.user?.email;
 
       const durationText = `${startsAt.toLocaleDateString("en-IN", {
         dateStyle: "medium",
       })} to ${expiresAt.toLocaleDateString("en-IN", { dateStyle: "medium" })}`;
 
-      if (userEmail) {
-        const certificateBuffer = await generateCertificatePDF(memberName, durationText);
-        await sendMembershipCertificateEmail(userEmail, memberName, certificateBuffer);
-      }
+      const certificateBuffer = await generateCertificatePDF(memberName, durationText);
+      await sendMembershipCertificateEmail(userEmail, memberName, certificateBuffer);
     } catch (certErr) {
       console.error("Certificate generation/email failed (membership still activated):", certErr);
     }

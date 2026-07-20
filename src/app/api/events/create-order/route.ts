@@ -34,20 +34,12 @@ export async function POST(request: Request) {
       .eq("id", eventId)
       .single();
 
-    console.log("EVENT DATA:");
-    console.log(event);
-
     if (eventError || !event) {
       console.error(eventError);
 
       return NextResponse.json(
-        {
-          error: "Event not found.",
-          details: eventError,
-        },
-        {
-          status: 404,
-        }
+        { error: "Event not found." },
+        { status: 404 }
       );
     }
 
@@ -70,9 +62,6 @@ export async function POST(request: Request) {
       receipt: `evt_${eventId.slice(0, 8)}_${Date.now().toString().slice(-6)}`,
     });
 
-    console.log("RAZORPAY ORDER:");
-    console.log(order);
-
     // ==========================
     // Save Pending Order
     // ==========================
@@ -87,28 +76,14 @@ export async function POST(request: Request) {
       })
       .select();
 
-    console.log("INSERT RESULT:");
-    console.log(insertResult);
-
     if (insertResult.error) {
-      console.error("SUPABASE INSERT ERROR:");
-      console.error(insertResult.error);
+      console.error("SUPABASE INSERT ERROR:", insertResult.error);
 
       return NextResponse.json(
-        {
-          error: insertResult.error.message,
-          details: insertResult.error.details,
-          hint: insertResult.error.hint,
-          code: insertResult.error.code,
-        },
-        {
-          status: 500,
-        }
+        { error: "Failed to create order." },
+        { status: 500 }
       );
     }
-
-    console.log("Inserted Order:");
-    console.log(insertResult.data);
 
     return NextResponse.json({
       success: true,
@@ -118,17 +93,13 @@ export async function POST(request: Request) {
       eventTitle: event.title,
     });
   } catch (error: any) {
-    console.error("CREATE EVENT ORDER ERROR:");
-    console.error(error);
+    console.error("CREATE EVENT ORDER ERROR:", error);
 
+    // Stack traces / raw error details are intentionally not sent to the
+    // client in a live-payments route — only a generic message is exposed.
     return NextResponse.json(
-      {
-        error: error?.message || "Unknown Error",
-        stack: error?.stack,
-      },
-      {
-        status: 500,
-      }
+      { error: error?.message || "Unknown Error" },
+      { status: 500 }
     );
   }
 }

@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
-const MEMBERSHIP_AMOUNT = 4999;
+const PLAN_CONFIG = {
+  intro: { amount: 4999, isIntroOffer: true },
+  regular: { amount: 6000, isIntroOffer: false },
+} as const;
+
+type PlanId = keyof typeof PLAN_CONFIG;
 
 const razorpay = new Razorpay({
   key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
@@ -11,7 +16,7 @@ const razorpay = new Razorpay({
 
 export async function POST(request: Request) {
   try {
-    const { userId } = await request.json();
+    const { userId, plan } = await request.json();
 
     if (!userId) {
       return NextResponse.json(
@@ -19,6 +24,15 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    if (!plan || !(plan in PLAN_CONFIG)) {
+      return NextResponse.json(
+        { error: "A valid plan ('intro' or 'regular') is required." },
+        { status: 400 }
+      );
+    }
+
+    const { amount: planAmount, isIntroOffer } = PLAN_CONFIG[plan as PlanId];
 
     // Get authenticated user's email
     const { data: authUser, error: authError } =
@@ -50,7 +64,7 @@ export async function POST(request: Request) {
 
     // Create Razorpay Order
     const order = await razorpay.orders.create({
-      amount: MEMBERSHIP_AMOUNT * 100,
+      amount: planAmount * 100,
       currency: "INR",
       receipt: `membership_${Date.now()}`,
     });
@@ -61,9 +75,9 @@ export async function POST(request: Request) {
       .insert({
         user_id: userId,
         razorpay_order_id: order.id,
-        plan: "intro",
-        amount: MEMBERSHIP_AMOUNT,
-        is_intro_offer: true,
+        plan,
+        amount: planAmount,
+        is_intro_offer: isIntroOffer,
         status: "pending",
       });
 
