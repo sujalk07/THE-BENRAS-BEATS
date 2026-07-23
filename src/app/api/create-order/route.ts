@@ -47,20 +47,12 @@ export async function POST(request: Request) {
 
     const email = authUser.user.email.toLowerCase();
 
-    // Prevent duplicate active memberships
-    const { data: existingMembership } = await supabaseAdmin
-      .from("memberships")
-      .select("id")
-      .eq("email", email)
-      .eq("status", "active")
-      .maybeSingle();
-
-    if (existingMembership) {
-      return NextResponse.json(
-        { error: "You already have an active membership." },
-        { status: 409 }
-      );
-    }
+    // NOTE: We intentionally no longer block users who already have an
+    // active membership from purchasing again. Renewals are allowed at
+    // any time before (or after) expiry. The renewal logic — extending
+    // the existing membership's expiry from its current expiry date
+    // instead of creating a duplicate row — is handled entirely in
+    // verify-payment.
 
     // Create Razorpay Order
     const order = await razorpay.orders.create({

@@ -298,7 +298,7 @@ export default function MembershipPage() {
       </div>
     );
   }
-
+    
   // ============================================================
   // MEMBERSHIPS DISABLED — show QR-code + payment-proof form instead
   // (this replaces the old "notify me" waitlist)

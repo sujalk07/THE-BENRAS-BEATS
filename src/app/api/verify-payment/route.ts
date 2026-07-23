@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get Order Details
+    // Get Order Details (read-only — just for ownership check + amount/plan info)
     const { data: order, error: orderError } = await supabaseAdmin
       .from("membership_orders")
       .select("*")
@@ -57,7 +57,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Prevent duplicate processing
+    // Fast-path duplicate check (the RPC re-checks this under a row lock
+    // too, to close the race window — this early return just avoids an
+    // unnecessary RPC call on the common "webhook fired twice" case).
     if (order.status === "paid") {
       return NextResponse.json({
         success: true,
@@ -65,26 +67,9 @@ export async function POST(request: Request) {
       });
     }
 
-    // Current Time
-    const startsAt = new Date();
-    const expiresAt = new Date(startsAt);
-    expiresAt.setMonth(expiresAt.getMonth() + 6);
+    const paidAt = new Date();
 
-    // Update Membership Order
-    const { error: orderUpdateError } = await supabaseAdmin
-      .from("membership_orders")
-      .update({
-        status: "paid",
-        razorpay_payment_id,
-        paid_at: new Date().toISOString(),
-      })
-      .eq("id", order.id);
-
-    if (orderUpdateError) {
-      throw orderUpdateError;
-    }
-
-    // Fetch the auth user once, reused for email + certificate below
+    // Fetch the auth user once, reused for the RPC call + certificate/email below
     const { data: authUserResult, error: authUserError } =
       await supabaseAdmin.auth.admin.getUserById(userId);
 
@@ -94,66 +79,48 @@ export async function POST(request: Request) {
 
     const userEmail = authUserResult.user.email.toLowerCase();
 
-    // Check if membership already exists
-    const { data: existingMembership } = await supabaseAdmin
-      .from("memberships")
-      .select("id")
-      .eq("email", userEmail)
-      .eq("status", "active")
-      .maybeSingle();
+    // ==========================================================
+    // ALL database writes (membership_orders, razorpay_based_membership,
+    // profiles, memberships) happen atomically inside this single RPC call.
+    // If any step inside it fails, Postgres rolls back all of them —
+    // no partial state is possible.
+    // ==========================================================
+    const { data: rpcResult, error: rpcError } = await supabaseAdmin.rpc(
+      "process_membership_payment",
+      {
+        p_order_id: order.id,
+        p_razorpay_order_id: razorpay_order_id,
+        p_razorpay_payment_id: razorpay_payment_id,
+        p_user_id: userId,
+        p_email: userEmail,
+        p_amount: order.amount,
+        p_is_intro_offer: order.is_intro_offer,
+        p_paid_at: paidAt.toISOString(),
+      }
+    );
 
-    if (existingMembership) {
+    if (rpcError) {
+      throw rpcError;
+    }
+
+    if (rpcResult?.already_paid) {
+      // A concurrent request beat us to it after our fast-path check above.
       return NextResponse.json({
         success: true,
-        message: "Membership already exists.",
+        message: "Payment already verified.",
       });
     }
 
-    const { error: razorpayMembershipError } = await supabaseAdmin
-      .from("razorpay_based_membership")
-      .insert({
-        email: userEmail,
-        razorpay_order_id,
-        razorpay_payment_id,
-        amount: order.amount,
-        is_intro_offer: order.is_intro_offer,
-        status: "paid",
-        starts_at: startsAt.toISOString(),
-        expires_at: expiresAt.toISOString(),
-        paid_at: new Date().toISOString(),
-      });
+    const isRenewal: boolean = rpcResult.is_renewal;
+    const membershipStartsAt = new Date(rpcResult.starts_at);
+    const membershipExpiresAt = new Date(rpcResult.expires_at);
 
-    if (razorpayMembershipError) {
-      throw razorpayMembershipError;
-    }
-
-    await supabaseAdmin
-      .from("profiles")
-      .update({
-        membership_status: "active",
-      })
-      .eq("id", userId);
-
-    // Create Membership
-    const { error: membershipError } = await supabaseAdmin
-      .from("memberships")
-      .insert({
-        email: userEmail,
-        amount: order.amount,
-        status: "active",
-        starts_at: startsAt.toISOString(),
-        expires_at: expiresAt.toISOString(),
-        created_with: "razorpay",
-      });
-
-    if (membershipError) {
-      throw membershipError;
-    }
-
-    // ==========================
-    // Generate & email the membership certificate
-    // (Non-blocking failure — membership is already active regardless of email outcome)
-    // ==========================
+    // ==========================================================
+    // Everything below runs ONLY after the transaction has committed.
+    // Certificate generation and email are external side effects and
+    // are intentionally NOT part of the atomic transaction. A failure
+    // here must never roll back or block the already-active membership.
+    // ==========================================================
     try {
       const { data: profile } = await supabaseAdmin
         .from("profiles")
@@ -163,9 +130,11 @@ export async function POST(request: Request) {
 
       const memberName = profile?.full_name ?? "Valued Member";
 
-      const durationText = `${startsAt.toLocaleDateString("en-IN", {
+      const durationText = `${membershipStartsAt.toLocaleDateString("en-IN", {
         dateStyle: "medium",
-      })} to ${expiresAt.toLocaleDateString("en-IN", { dateStyle: "medium" })}`;
+      })} to ${membershipExpiresAt.toLocaleDateString("en-IN", {
+        dateStyle: "medium",
+      })}`;
 
       const certificateBuffer = await generateCertificatePDF(memberName, durationText);
       await sendMembershipCertificateEmail(userEmail, memberName, certificateBuffer);
@@ -175,7 +144,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: "Membership activated successfully!",
+      message: isRenewal
+        ? "Membership renewed successfully!"
+        : "Membership activated successfully!",
     });
   } catch (error: any) {
     console.error(error);
