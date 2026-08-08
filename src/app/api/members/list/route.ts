@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
       console.error("Membership count error:", countError);
     }
 
-    // Check if the requester is themselves an active member
+    // Check if the requester is themselves an active member (still used to gate Esteemed Members)
     const { data: requesterMembership } = await supabaseAdmin
       .from("memberships")
       .select("status, expires_at")
@@ -43,23 +43,12 @@ export async function GET(req: NextRequest) {
 
     const isMember = !!requesterMembership && requesterMembership.status === "active" && !isExpired;
 
-    // Non-members only get the total count — no roster, no featured members
-    if (!isMember) {
-      return NextResponse.json({
-        isMember: false,
-        totalCount: totalCount ?? 0,
-        featured: [],
-        members: [],
-      });
-    }
+    // Featured/esteemed members — still a members-only perk
+    const { data: featured } = isMember
+      ? await supabaseAdmin.from("featured_members").select("*").order("display_order", { ascending: true })
+      : { data: [] as any[] };
 
-    // Fetch featured/esteemed members (members-only)
-    const { data: featured } = await supabaseAdmin
-      .from("featured_members")
-      .select("*")
-      .order("display_order", { ascending: true });
-
-    // Fetch all active memberships, oldest first, for serial numbering
+    // Full roster — now shown to ANY logged-in user, member or not
     const { data: allMemberships, error } = await supabaseAdmin
       .from("memberships")
       .select("id, email, created_at, expires_at, status")
@@ -97,7 +86,7 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json({
-      isMember: true,
+      isMember,
       totalCount: totalCount ?? members.length,
       featured: featured ?? [],
       members,
