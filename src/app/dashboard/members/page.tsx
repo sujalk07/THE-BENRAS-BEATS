@@ -2,8 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  Loader2,
+  Crown,
+  User,
+  Users,
+  ArrowUpRight,
+} from "lucide-react";
+
 import { useAuth } from "@/components/providers/AuthProvider";
-import { ArrowLeft, Loader2, Crown, User, Users } from "lucide-react";
 
 interface FeaturedMember {
   id: string;
@@ -63,123 +71,198 @@ export default function DashboardMembersPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center text-gray-400">
-        <Loader2 className="animate-spin mr-2" size={18} />
+      <div className="flex min-h-screen items-center justify-center bg-[#0A0908] text-gray-500">
+        <Loader2 className="mr-2 animate-spin text-[#B8923F]" size={17} />
         Loading...
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#0B0C10] px-6 py-10 text-white">
+    <main className="min-h-screen bg-[#0A0908] px-5 py-8 text-white">
       <div className="mx-auto max-w-4xl">
-        <button
-          type="button"
-          onClick={() => router.push("/dashboard")}
-          className="mb-8 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-amber-400 transition hover:bg-white/10 hover:text-amber-300"
-        >
-          <ArrowLeft size={16} />
-          Back to Dashboard
-        </button>
 
-        <h1 className="text-3xl font-bold">Our Members</h1>
+        {/* Header */}
+        <div className="mb-8 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => router.push("/dashboard")}
+            className="group flex items-center gap-2 text-xs text-gray-500 transition hover:text-[#C9A24B]"
+          >
+            <ArrowLeft
+              size={15}
+              className="transition-transform group-hover:-translate-x-1"
+            />
+            Dashboard
+          </button>
 
-        <p className="mt-2 text-gray-400">
-          A community of {totalCount}+ members and counting.
-        </p>
+          <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-gray-700">
+            TBB / Community
+          </span>
+        </div>
 
+        {/* Intro */}
+        <div className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+          <div>
+            <span className="text-[9px] uppercase tracking-[0.25em] text-[#B8923F]">
+              The Community
+            </span>
+
+            <h1 className="mt-2 font-serif text-4xl text-[#EDE6D9]">
+              Our Members
+            </h1>
+
+            <p className="mt-2 text-sm text-gray-500">
+              A growing circle of {totalCount}+ people connected through music.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 text-[9px] uppercase tracking-[0.15em] text-gray-600">
+            <Users size={13} />
+            {totalCount} Members
+          </div>
+        </div>
+
+        {/* Featured Members */}
         {featured.length > 0 && (
-          <div className="mt-10">
-            <h2 className="mb-5 flex items-center gap-2 text-lg font-bold text-amber-400">
-              <Crown size={18} />
-              Esteemed Members
-            </h2>
+          <section className="mb-8">
+            <div className="mb-4 flex items-center gap-3">
+              <Crown size={15} className="text-[#C9A24B]" />
 
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <h2 className="font-mono text-[10px] uppercase tracking-[0.2em] text-gray-500">
+                Esteemed Members
+              </h2>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {featured.map((m) => (
                 <div
                   key={m.id}
-                  className="flex flex-col items-center rounded-2xl border border-amber-500/20 bg-gradient-to-b from-amber-500/5 to-transparent p-6 text-center"
+                  className="group relative overflow-hidden rounded-xl border border-white/[0.08] bg-[#11100E] p-4 transition-all duration-300 hover:border-[#B8923F]/30"
                 >
-                  {m.photo_url ? (
-                    <img
-                      src={m.photo_url}
-                      alt={m.name}
-                      className="h-20 w-20 rounded-full border-2 border-amber-500/30 object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-dashed border-amber-500/20 bg-amber-500/5 text-amber-500/40">
-                      <User size={28} />
+                  <div className="flex items-center gap-4">
+                    {m.photo_url ? (
+                      <img
+                        src={m.photo_url}
+                        alt={m.name}
+                        className="h-14 w-14 shrink-0 rounded-full border border-[#B8923F]/30 object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-gray-600">
+                        <User size={20} />
+                      </div>
+                    )}
+
+                    <div className="min-w-0">
+                      <h3 className="truncate font-serif text-lg text-[#EDE6D9]">
+                        {m.name}
+                      </h3>
+
+                      {m.profession && (
+                        <p className="mt-0.5 truncate text-[9px] uppercase tracking-[0.12em] text-[#B8923F]">
+                          {m.profession}
+                        </p>
+                      )}
                     </div>
-                  )}
-
-                  <h3 className="mt-4 font-bold text-white">{m.name}</h3>
-
-                  {m.profession && (
-                    <p className="mt-0.5 text-xs uppercase tracking-wide text-amber-400">
-                      {m.profession}
-                    </p>
-                  )}
+                  </div>
 
                   {m.details && (
-                    <p className="mt-3 text-sm leading-relaxed text-gray-400">
+                    <p className="mt-4 line-clamp-2 text-xs leading-5 text-gray-500">
                       {m.details}
                     </p>
                   )}
+
+                  <div className="absolute bottom-0 left-0 h-px w-0 bg-[#B8923F] transition-all duration-500 group-hover:w-full" />
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         )}
 
-        <div className="mt-12">
-          <h2 className="mb-4 text-lg font-bold text-white">Community Members</h2>
+        {/* Community Directory */}
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-mono text-[10px] uppercase tracking-[0.2em] text-gray-500">
+              Community Directory
+            </h2>
+
+            <span className="text-[9px] text-gray-700">
+              {members.length} listed
+            </span>
+          </div>
 
           {members.length === 0 ? (
-            <p className="text-sm text-gray-500">No members yet.</p>
+            <div className="rounded-xl border border-dashed border-white/[0.1] py-10 text-center text-sm text-gray-600">
+              No members yet.
+            </div>
           ) : (
-            <div className="overflow-hidden rounded-xl border border-white/10">
-              <table className="w-full text-sm">
-                <thead className="bg-white/[0.03] text-left text-gray-400">
-                  <tr>
-                    <th className="w-16 px-4 py-3 font-medium">S.No.</th>
-                    <th className="px-4 py-3 font-medium">Name</th>
-                    <th className="px-4 py-3 font-medium">Membership ID</th>
-                  </tr>
-                </thead>
+            <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[#11100E]">
 
-                <tbody className="divide-y divide-white/5">
-                  {members.map((m) => (
-                    <tr key={m.membership_id}>
-                      <td className="px-4 py-3 text-gray-400">{m.serial}</td>
-                      <td className="px-4 py-3 font-medium text-white">{m.name}</td>
-                      <td className="px-4 py-3 font-mono text-amber-400">{m.membership_id}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {/* Desktop header */}
+              <div className="hidden grid-cols-[70px_1fr_180px] border-b border-white/[0.06] px-4 py-3 font-mono text-[9px] uppercase tracking-[0.15em] text-gray-700 sm:grid">
+                <span>#</span>
+                <span>Name</span>
+                <span>Membership ID</span>
+              </div>
+
+              {members.map((m) => (
+                <div
+                  key={m.membership_id}
+                  className="grid grid-cols-[35px_1fr_auto] items-center border-b border-white/[0.05] px-4 py-3 last:border-b-0 transition hover:bg-white/[0.02] sm:grid-cols-[70px_1fr_180px]"
+                >
+                  <span className="font-mono text-[10px] text-gray-700">
+                    {String(m.serial).padStart(2, "0")}
+                  </span>
+
+                  <span className="truncate text-sm text-gray-300">
+                    {m.name}
+                  </span>
+
+                  <span className="font-mono text-[10px] text-[#B8923F]">
+                    {m.membership_id}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
-        </div>
+        </section>
 
+        {/* Membership CTA */}
         {!isMember && (
-          <div className="mt-12 flex flex-col items-center rounded-3xl border border-amber-500/20 bg-gradient-to-b from-amber-500/10 to-transparent p-10 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-500/10">
-              <Users className="text-amber-400" size={26} />
+          <div className="mt-8 flex flex-col gap-5 rounded-xl border border-[#B8923F]/20 bg-[#B8923F]/[0.035] p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <Crown size={15} className="text-[#C9A24B]" />
+
+                <h3 className="font-serif text-lg text-[#EDE6D9]">
+                  Become part of the circle
+                </h3>
+              </div>
+
+              <p className="mt-1 max-w-xl text-xs leading-5 text-gray-500">
+                Unlock esteemed members, priority event access, and exclusive
+                community experiences.
+              </p>
             </div>
-            <h3 className="mt-5 text-xl font-bold text-white">Want to unlock more?</h3>
-            <p className="mx-auto mt-3 max-w-md text-sm text-gray-400 leading-relaxed">
-              Become a member to see our Esteemed Members, get priority event
-              access, and unlock exclusive community perks.
-            </p>
+
             <button
               onClick={() => router.push("/membership")}
-              className="mt-6 rounded-xl bg-amber-500 px-6 py-2.5 text-sm font-bold text-black transition hover:bg-amber-400"
+              className="group inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#C9A24B] px-5 py-2.5 text-xs font-semibold text-[#0A0908] transition hover:bg-[#D9B662]"
             >
               Become a Member
+              <ArrowUpRight
+                size={13}
+                className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+              />
             </button>
           </div>
         )}
+
+        {/* Footer */}
+        <div className="mt-7 flex justify-between border-t border-white/[0.06] pt-5 text-[9px] uppercase tracking-[0.15em] text-gray-700">
+          <span>Music · Culture · Community</span>
+          <span>Varanasi</span>
+        </div>
       </div>
     </main>
   );

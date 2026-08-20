@@ -1,114 +1,135 @@
-import React from 'react';
-import { Handshake } from 'lucide-react';
+"use client";
 
-import sponsorPhoto1 from '../assets/sponser_image1.jpg'; // BHAIRAVI
-import sponsorPhoto2 from '../assets/sponser_image2.jpeg';      // CHETMANI
-import sponsorPhoto3 from '../assets/sponser_image3.jpeg';   // RADIO CITY
+import React from "react";
+import Image from "next/image";
+import { ArrowUpRight, Handshake } from "lucide-react";
+
+import sponsorPhoto1 from "../assets/sponser_image1.jpg";
+import sponsorPhoto2 from "../assets/sponser_image2.jpeg";
+import sponsorPhoto3 from "../assets/sponser_image3.jpeg";
 
 export default function Sponsors() {
+  const sponsors = [
+    {
+      image: sponsorPhoto1,
+      name: "BHAIRAVI",
+      subtitle: "A Unit of S.B Rajasthan Marbles",
+      alt: "Bhairavi - A Unit of S.B Rajasthan Marbles",
+    },
+    {
+      image: sponsorPhoto2,
+      name: "CHETMANI",
+      subtitle: "Ornaments & Jewellers Pvt. Ltd.",
+      alt: "Chetmani Ornaments & Jewellers Pvt. Ltd.",
+    },
+    {
+      image: sponsorPhoto3,
+      name: "RADIO CITY",
+      subtitle: "A Jagran Initiative",
+      alt: "Radio City - A Jagran Initiative",
+    },
+  ];
+
   return (
-    <section className="relative px-6 py-24 bg-[#050508] text-white overflow-hidden border-t border-gray-900/40">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-purple-950/5 blur-[120px] pointer-events-none rounded-full" />
+    <section className="relative overflow-hidden border-t border-white/[0.06] bg-[#0A0908] px-6 py-24 text-white">
+      {/* Ambient background */}
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[500px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#B8923F]/[0.025] blur-[140px]" />
 
-      <div className="relative mx-auto max-w-5xl text-center">
+      <div className="relative mx-auto max-w-6xl">
 
-        {/* Heading */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs tracking-wider uppercase mb-6">
-          <Handshake className="w-3.5 h-3.5" />
-          Partnerships
-        </div>
+        {/* Header */}
+        <div className="mb-14 flex flex-col items-center text-center">
+          <div className="mb-6 flex items-center gap-4">
+            <span className="h-px w-12 bg-gradient-to-r from-transparent to-[#B8923F]/60" />
 
-        <h2 className="text-4xl md:text-5xl font-serif tracking-wide text-gray-100">
-          Our Sponsors
-        </h2>
+            <span className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-[#B8923F]">
+              <Handshake className="h-3.5 w-3.5" />
+              In Partnership
+            </span>
 
-        <div className="flex items-center justify-center gap-4 mt-4 mb-6 w-full max-w-xs mx-auto">
-          <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-amber-500/40" />
-          <span className="text-amber-500 text-xs opacity-60">🎵</span>
-          <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-amber-500/40" />
-        </div>
-
-        <p className="mx-auto max-w-xl text-sm md:text-base text-gray-400 leading-relaxed mb-12">
-          Sponsorship and corporate alignment opportunities will be officially
-          announced soon. Join us in shaping the cultural movement.
-        </p>
-
-        {/* Sponsors Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-          {/* Sponsor 1 - BHAIRAVI */}
-          <div className="overflow-hidden rounded-2xl border border-gray-900 bg-[#0b0c10]/40 backdrop-blur-sm shadow-lg">
-            <img
-              src={sponsorPhoto1.src ?? sponsorPhoto1}
-              alt="Bhairavi - A Unit of S.B Rajasthan Marbles"
-              className="w-full h-64 object-cover"
-            />
-
-            <div className="p-5 text-left">
-              <h3 className="text-lg font-semibold text-gray-100">
-                BHAIRAVI
-              </h3>
-
-              <p className="text-sm text-amber-400 mt-1">
-                A Unit of S.B Rajasthan Marbles
-              </p>
-
-              <p className="mt-2 text-sm text-gray-400 leading-relaxed">
-                Proud sponsor and partner supporting our cultural journey.
-              </p>
-            </div>
+            <span className="h-px w-12 bg-gradient-to-l from-transparent to-[#B8923F]/60" />
           </div>
 
+          <h2 className="font-serif text-4xl tracking-wide text-[#EDE6D9] md:text-5xl">
+            The people behind the movement.
+          </h2>
 
-          {/* Sponsor 2 - CHETMANI */}
-          <div className="overflow-hidden rounded-2xl border border-gray-900 bg-[#0b0c10]/40 backdrop-blur-sm shadow-lg">
-            <img
-              src={sponsorPhoto2.src ?? sponsorPhoto2}
-              alt="Chetmani Ornaments & Jewellers Pvt. Ltd."
-              className="w-full h-64 object-contain bg-white p-4"
-            />
-
-            <div className="p-5 text-left">
-              <h3 className="text-lg font-semibold text-gray-100">
-                Chetmani
-              </h3>
-
-              <p className="text-sm text-amber-400 mt-1">
-                Ornaments & Jewellers Pvt. Ltd.
-              </p>
-
-              <p className="mt-2 text-sm text-gray-400 leading-relaxed">
-                Proud sponsor and partner supporting our cultural journey.
-              </p>
-            </div>
-          </div>
-
-
-          {/* Sponsor 3 - RADIO CITY */}
-          <div className="overflow-hidden rounded-2xl border border-gray-900 bg-[#0b0c10]/40 backdrop-blur-sm shadow-lg">
-            <img
-              src={sponsorPhoto3.src ?? sponsorPhoto3}
-              alt="Radio City - A Jagran Initiative"
-              className="w-full h-64 object-contain bg-white p-4"
-            />
-
-            <div className="p-5 text-left">
-              <h3 className="text-lg font-semibold text-gray-100">
-                Radio City
-              </h3>
-
-              <p className="text-sm text-amber-400 mt-1">
-                A Jagran Initiative
-              </p>
-
-              <p className="mt-2 text-sm text-gray-400 leading-relaxed">
-                Proud sponsor and partner supporting our cultural journey.
-              </p>
-            </div>
-          </div>
-
+          <p className="mt-6 max-w-xl text-sm leading-7 text-gray-400 md:text-base">
+            Our partners help us create spaces where music, culture, and
+            community can come together.
+          </p>
         </div>
 
+        {/* Sponsor wall */}
+        <div className="grid border border-white/[0.08] bg-[#11100E] md:grid-cols-3">
+
+          {sponsors.map((sponsor, index) => (
+            <div
+              key={sponsor.name}
+              className={`group relative flex min-h-[390px] flex-col ${
+                index !== sponsors.length - 1
+                  ? "border-b border-white/[0.08] md:border-b-0 md:border-r"
+                  : ""
+              }`}
+            >
+
+              {/* Sponsor number */}
+              <div className="flex items-center justify-between border-b border-white/[0.07] px-5 py-4">
+                <span className="font-mono text-[9px] tracking-[0.2em] text-gray-600">
+                  PARTNER / 0{index + 1}
+                </span>
+
+                <ArrowUpRight
+                  className="h-4 w-4 text-gray-700 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#B8923F]"
+                />
+              </div>
+
+              {/* Image */}
+              <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-[#F5F3EE] p-6">
+                <Image
+                  src={sponsor.image}
+                  alt={sponsor.alt}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className={`transition-transform duration-700 group-hover:scale-[1.03] ${
+                    index === 0
+                      ? "object-cover"
+                      : "object-contain p-8"
+                  }`}
+                />
+
+                {/* Image overlay */}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/[0.08] to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              </div>
+
+              {/* Sponsor details */}
+              <div className="border-t border-white/[0.07] bg-[#11100E] px-6 py-5">
+                <h3 className="font-serif text-xl tracking-wide text-[#EDE6D9] transition-colors duration-300 group-hover:text-[#C9A24B]">
+                  {sponsor.name}
+                </h3>
+
+                <p className="mt-1 text-[10px] uppercase tracking-[0.15em] text-[#B8923F]">
+                  {sponsor.subtitle}
+                </p>
+              </div>
+
+              {/* Hover accent */}
+              <div className="absolute bottom-0 left-0 h-px w-0 bg-[#B8923F] transition-all duration-500 group-hover:w-full" />
+            </div>
+          ))}
+        </div>
+
+        {/* Partnership footer */}
+        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/[0.06] pt-6 text-center sm:flex-row sm:text-left">
+          <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-gray-600">
+            Music · Culture · Community
+          </span>
+
+          <p className="max-w-md text-xs leading-5 text-gray-600">
+            Interested in becoming part of the Benaras Beats journey?
+            Partnership opportunities will be announced soon.
+          </p>
+        </div>
       </div>
     </section>
   );

@@ -1,3 +1,5 @@
+// app/admin/performers/page.tsx
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -12,7 +14,6 @@ import {
   ChevronDown,
   Trash2,
   X,
-  BadgeInfo,
 } from "lucide-react";
 
 interface PerformerRequest {
@@ -34,32 +35,41 @@ function cn(...classes: Array<string | false | null | undefined>) {
 
 export default function AdminPerformersPage() {
   const { user } = useAuth();
+
   const [applications, setApplications] = useState<PerformerRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchApplications() {
-      if (!user) return;
+  const fetchApplications = async () => {
+    if (!user) return;
 
-      try {
-        const res = await fetch(`/api/admin/performer-requests?userId=${user.id}`);
-        const data = await res.json();
-        if (res.ok) setApplications(data.applications ?? []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+    try {
+      const res = await fetch(
+        `/api/admin/performer-requests?userId=${user.id}`,
+        { cache: "no-store" }
+      );
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setApplications(data.applications ?? []);
       }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     fetchApplications();
   }, [user]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
+
     if (!q) return applications;
 
     return applications.filter(
@@ -82,13 +92,21 @@ export default function AdminPerformersPage() {
 
   const handleDelete = async (id: string) => {
     if (!user) return;
-    if (!confirm("Delete this application? This cannot be undone.")) return;
+
+    if (!confirm("Delete this application? This cannot be undone.")) {
+      return;
+    }
 
     setDeletingId(id);
+
     try {
-      const res = await fetch(`/api/admin/performer-requests/${id}?userId=${user.id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/admin/performer-requests/${id}?userId=${user.id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
       const data = await res.json();
 
       if (!res.ok) {
@@ -96,8 +114,13 @@ export default function AdminPerformersPage() {
         return;
       }
 
-      setApplications((prev) => prev.filter((a) => a.id !== id));
-      if (expandedId === id) setExpandedId(null);
+      setApplications((prev) =>
+        prev.filter((a) => a.id !== id)
+      );
+
+      if (expandedId === id) {
+        setExpandedId(null);
+      }
     } catch (err: any) {
       alert(err?.message || "Something went wrong");
     } finally {
@@ -108,37 +131,44 @@ export default function AdminPerformersPage() {
   return (
     <div className="min-h-screen bg-[#090b10] px-4 py-8 text-white sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-6xl">
+
+        {/* Header */}
         <div className="rounded-[28px] border border-white/10 bg-[#11141b] px-6 py-6 shadow-[0_10px_40px_rgba(0,0,0,0.25)] sm:px-8 sm:py-7">
           <div className="flex flex-col gap-5">
+
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div className="max-w-2xl">
                 <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
                   Performer applications
                 </h1>
+
                 <p className="mt-2 text-sm text-gray-400">
                   {applications.length} artist
                   {applications.length !== 1 ? "s" : ""} applied to perform
                 </p>
               </div>
 
-              <div className="self-start rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-xs font-medium text-emerald-300 shadow-sm">
+              <div className="self-start rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-xs font-medium text-emerald-300">
                 Live list
               </div>
             </div>
 
+            {/* Search */}
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
               <div className="relative w-full">
                 <Search
                   size={16}
                   className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"
                 />
+
                 <input
-  type="text"
-  placeholder="Search by name, genre, or email"
-  value={search}
-  onChange={(e) => setSearch(e.target.value)}
-  className="h-12 w-full rounded-xl border border-white/10 bg-[#0d1016] pl-12 pr-10 text-sm text-white placeholder-gray-500 outline-none transition focus:border-amber-500/60 focus:ring-4 focus:ring-amber-500/10"
-/>
+                  type="text"
+                  placeholder="Search by name, genre, or email"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="h-12 w-full rounded-xl border border-white/10 bg-[#0d1016] pl-12 pr-10 text-sm text-white placeholder-gray-500 outline-none transition focus:border-amber-500/60 focus:ring-4 focus:ring-amber-500/10"
+                />
+
                 {search && (
                   <button
                     type="button"
@@ -154,19 +184,27 @@ export default function AdminPerformersPage() {
           </div>
         </div>
 
+        {/* Loading */}
         {loading ? (
           <div className="mt-8 flex items-center gap-2 text-gray-400">
             <Loader2 size={16} className="animate-spin" />
             Loading applications...
           </div>
         ) : filtered.length === 0 ? (
+
+          /* Empty state */
           <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-[#11141b] py-14 text-center">
-            <Music size={28} className="mx-auto text-gray-600" />
+            <Music
+              size={28}
+              className="mx-auto text-gray-600"
+            />
+
             <p className="mt-3 text-sm text-gray-400">
               {applications.length === 0
                 ? "No performer applications yet."
                 : "No applications match your search."}
             </p>
+
             {search && (
               <button
                 type="button"
@@ -178,6 +216,8 @@ export default function AdminPerformersPage() {
             )}
           </div>
         ) : (
+
+          /* Applications */
           <div className="mt-6 space-y-4">
             {filtered.map((app) => {
               const isExpanded = expandedId === app.id;
@@ -187,6 +227,8 @@ export default function AdminPerformersPage() {
                   key={app.id}
                   className="overflow-hidden rounded-[24px] border border-white/10 bg-[#11141b] shadow-sm transition hover:border-white/15"
                 >
+
+                  {/* Application Header */}
                   <button
                     type="button"
                     onClick={() => toggleExpand(app.id)}
@@ -195,19 +237,21 @@ export default function AdminPerformersPage() {
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-3">
-  <span className="truncate text-base font-semibold text-white sm:text-lg">
-    {app.artist_name}
-  </span>
 
-  <span className="shrink-0 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-400">
-  {app.genre}
-</span>
-{app.artist_type && (
-  <span className="shrink-0 rounded-full bg-purple-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-purple-400">
-    {app.artist_type}
-  </span>
-)}
-</div>
+                        <span className="truncate text-base font-semibold text-white sm:text-lg">
+                          {app.artist_name}
+                        </span>
+
+                        <span className="shrink-0 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-400">
+                          {app.genre}
+                        </span>
+
+                        {app.artist_type && (
+                          <span className="shrink-0 rounded-full bg-purple-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-purple-400">
+                            {app.artist_type}
+                          </span>
+                        )}
+                      </div>
 
                       <div className="mt-2 text-sm text-gray-400">
                         Submitted {formatDateTime(app.submitted_at)}
@@ -223,27 +267,45 @@ export default function AdminPerformersPage() {
                     />
                   </button>
 
+                  {/* Expanded Details */}
                   {isExpanded && (
                     <div className="border-t border-white/10 bg-[#0d1016] px-6 py-6 sm:px-7">
                       <div className="mx-auto max-w-5xl">
+
                         <div className="grid gap-5 lg:grid-cols-2">
+
+                          {/* Contact */}
                           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
                             <div className="mb-5 text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
                               Contact details
                             </div>
 
                             <div className="space-y-4 text-sm">
+
                               <div className="flex items-center gap-2 text-gray-300">
-                                <Phone size={14} className="shrink-0 text-gray-500" />
+                                <Phone
+                                  size={14}
+                                  className="shrink-0 text-gray-500"
+                                />
+
                                 <span className="break-all">
-                                  {app.contact_number || "Not provided"}
+                                  {app.contact_number ||
+                                    "Not provided"}
                                 </span>
                               </div>
 
                               <div className="flex items-center gap-2 text-gray-300">
-                                <Mail size={14} className="shrink-0 text-gray-500" />
+                                <Mail
+                                  size={14}
+                                  className="shrink-0 text-gray-500"
+                                />
+
                                 <a
-                                  href={app.email ? `mailto:${app.email}` : undefined}
+                                  href={
+                                    app.email
+                                      ? `mailto:${app.email}`
+                                      : undefined
+                                  }
                                   className={cn(
                                     "truncate",
                                     app.email
@@ -251,28 +313,41 @@ export default function AdminPerformersPage() {
                                       : "pointer-events-none text-gray-500"
                                   )}
                                 >
-                                  {app.email || "Not provided"}
+                                  {app.email ||
+                                    "Not provided"}
                                 </a>
                               </div>
+
                             </div>
                           </div>
 
+                          {/* Submission Info */}
                           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
                             <div className="mb-5 text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
                               Submission info
                             </div>
 
                             <div className="space-y-5 text-sm text-gray-300">
+
                               <div>
-                                <div className="text-gray-500">Bio</div>
+                                <div className="text-gray-500">
+                                  Bio
+                                </div>
+
                                 <p className="mt-2 leading-relaxed text-gray-300">
-                                  {app.bio || "No bio provided."}
+                                  {app.bio ||
+                                    "No bio provided."}
                                 </p>
                               </div>
 
                               <div className="grid gap-4 sm:grid-cols-2">
+
+                                {/* Social Link */}
                                 <div>
-                                  <div className="text-gray-500">Social link</div>
+                                  <div className="text-gray-500">
+                                    Social link
+                                  </div>
+
                                   {app.social_link ? (
                                     <a
                                       href={app.social_link}
@@ -280,15 +355,22 @@ export default function AdminPerformersPage() {
                                       rel="noopener noreferrer"
                                       className="mt-2 inline-flex items-center gap-1.5 text-amber-400 hover:text-amber-300"
                                     >
-                                      Open link <ExternalLink size={12} />
+                                      Open link
+                                      <ExternalLink size={12} />
                                     </a>
                                   ) : (
-                                    <div className="mt-2 text-gray-400">Not provided</div>
+                                    <div className="mt-2 text-gray-400">
+                                      Not provided
+                                    </div>
                                   )}
                                 </div>
 
+                                {/* Sample Track */}
                                 <div>
-                                  <div className="text-gray-500">Sample track</div>
+                                  <div className="text-gray-500">
+                                    Sample track
+                                  </div>
+
                                   {app.sample_track_url ? (
                                     <a
                                       href={app.sample_track_url}
@@ -296,29 +378,42 @@ export default function AdminPerformersPage() {
                                       rel="noopener noreferrer"
                                       className="mt-2 inline-flex items-center gap-1.5 text-amber-400 hover:text-amber-300"
                                     >
-                                      Open track <ExternalLink size={12} />
+                                      Open track
+                                      <ExternalLink size={12} />
                                     </a>
                                   ) : (
-                                    <div className="mt-2 text-gray-400">Not provided</div>
+                                    <div className="mt-2 text-gray-400">
+                                      Not provided
+                                    </div>
                                   )}
                                 </div>
+
                               </div>
                             </div>
                           </div>
                         </div>
 
+                        {/* Delete */}
                         <div className="mt-6 flex justify-end border-t border-white/10 pt-5">
                           <button
                             type="button"
-                            onClick={() => handleDelete(app.id)}
-                            disabled={deletingId === app.id}
+                            onClick={() =>
+                              handleDelete(app.id)
+                            }
+                            disabled={
+                              deletingId === app.id
+                            }
                             className="inline-flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-400 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             {deletingId === app.id ? (
-                              <Loader2 size={14} className="animate-spin" />
+                              <Loader2
+                                size={14}
+                                className="animate-spin"
+                              />
                             ) : (
                               <Trash2 size={14} />
                             )}
+
                             Delete application
                           </button>
                         </div>

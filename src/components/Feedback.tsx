@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, Send, Loader2, User, Sparkles } from "lucide-react";
+import {
+  MessageCircle,
+  Send,
+  Loader2,
+  User,
+  ArrowUpRight,
+} from "lucide-react";
 
 export default function Feedback() {
   const [name, setName] = useState("");
@@ -16,6 +22,7 @@ export default function Feedback() {
     }
 
     setSubmitting(true);
+
     try {
       const res = await fetch("/api/feedback/submit", {
         method: "POST",
@@ -44,108 +51,191 @@ export default function Feedback() {
   };
 
   return (
-    <section className="relative overflow-hidden border-t border-amber-500/10 bg-[#040405] px-6 py-24 text-white">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(212,175,55,0.16),_transparent_30%),radial-gradient(circle_at_bottom,_rgba(160,120,20,0.10),_transparent_28%)]" />
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[820px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-500/10 blur-[140px]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
+    <section className="relative overflow-hidden border-t border-white/[0.06] bg-[#0A0908] px-6 py-24 text-white">
+      {/* Subtle atmosphere */}
+      <div className="pointer-events-none absolute right-[-180px] top-1/2 h-[500px] w-[500px] -translate-y-1/2 rounded-full bg-[#B8923F]/[0.035] blur-[140px]" />
 
-      <div className="relative mx-auto w-full max-w-6xl">
-        <div className="mb-12 text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.28em] text-amber-300">
-            <Sparkles className="h-3.5 w-3.5" />
-            We&apos;d Love to Hear From You
-          </div>
-          <h2 className="text-4xl font-serif tracking-[0.06em] text-stone-100 md:text-6xl">
-            Share Your Feedback
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-stone-400 md:text-base">
-            Whether you attended an event, joined as a member, or simply want to say hello,
-            your thoughts help shape a more meaningful experience.
-          </p>
+      <div className="relative mx-auto max-w-6xl">
+
+        {/* Section label */}
+        <div className="mb-12 flex items-center gap-4">
+          <span className="h-px w-12 bg-[#B8923F]/70" />
+
+          <span className="text-[10px] uppercase tracking-[0.3em] text-[#B8923F]">
+            Your Voice
+          </span>
+
+          <span className="font-mono text-[9px] tracking-[0.15em] text-gray-700">
+            TBB / FEEDBACK
+          </span>
         </div>
 
-        <div className="mx-auto w-full max-w-5xl rounded-[2rem] border border-amber-400/15 bg-gradient-to-b from-[#0b0b0f]/95 via-[#09090d]/98 to-[#060607] p-6 shadow-[0_35px_100px_rgba(0,0,0,0.65)] backdrop-blur-xl md:p-8">
-          {submitted ? (
-            <div className="py-10 text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-emerald-400/20 bg-emerald-400/10 text-emerald-300">
-                <MessageCircle size={24} />
-              </div>
-              <h3 className="text-xl font-bold text-white">Thank you!</h3>
-              <p className="mt-2 text-sm text-stone-400">
-                Your feedback has been received successfully.
-              </p>
-              <button
-                onClick={() => setSubmitted(false)}
-                className="mt-6 text-xs uppercase tracking-[0.22em] text-amber-300 transition hover:text-amber-200"
-              >
-                Submit another response
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="text-center">
-                <p className="text-xs uppercase tracking-[0.32em] text-amber-300/80">
-                  The Benaras Beats
-                </p>
-                <h3 className="mt-3 text-2xl font-serif text-stone-50 md:text-3xl">
-                  Your voice helps shape our music, events, and membership experience.
-                </h3>
-                <p className="mx-auto mt-4 max-w-3xl text-sm leading-relaxed text-stone-400 md:text-base">
-                  Share what you enjoyed, what could be better, or any ideas you want us to bring to life.
-                </p>
-              </div>
+        <div className="grid gap-14 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24">
 
-              <div className="rounded-[1.4rem] border border-amber-400/10 bg-white/[0.02] p-5 md:p-6">
-                <div className="grid gap-5">
+          {/* LEFT — Editorial message */}
+          <div className="flex flex-col justify-between">
+
+            <div>
+              <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-gray-600">
+                After the music
+              </span>
+
+              <h2 className="mt-5 font-serif text-5xl leading-[1.02] tracking-wide text-[#EDE6D9] md:text-6xl">
+                Tell us what
+                <br />
+                <span className="italic text-[#C9A24B]">
+                  stayed with you.
+                </span>
+              </h2>
+
+              <p className="mt-8 max-w-md text-sm leading-7 text-gray-400 md:text-base">
+                Every event leaves something behind — a song, a conversation,
+                a feeling, an idea. Tell us about yours.
+              </p>
+            </div>
+
+            {/* Small editorial note */}
+            <div className="mt-14 border-l border-[#B8923F]/40 pl-5">
+              <p className="font-serif text-xl italic leading-relaxed text-[#D9CBA0]">
+                “The best gatherings continue long after the music stops.”
+              </p>
+
+              <p className="mt-3 text-[9px] uppercase tracking-[0.2em] text-gray-600">
+                The Benaras Beats
+              </p>
+            </div>
+          </div>
+
+          {/* RIGHT — Feedback form */}
+          <div className="relative border border-white/[0.08] bg-[#11100E]">
+
+            {/* Form header */}
+            <div className="flex items-center justify-between border-b border-white/[0.07] px-6 py-4">
+              <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-gray-600">
+                Guestbook / 01
+              </span>
+
+              <MessageCircle className="h-4 w-4 text-[#B8923F]" />
+            </div>
+
+            {submitted ? (
+              <div className="flex min-h-[430px] flex-col items-center justify-center px-7 py-12 text-center">
+
+                <div className="mb-6 flex h-14 w-14 items-center justify-center border border-[#B8923F]/30 bg-[#B8923F]/[0.06]">
+                  <MessageCircle className="h-6 w-6 text-[#C9A24B]" />
+                </div>
+
+                <h3 className="font-serif text-3xl text-[#EDE6D9]">
+                  Thank you.
+                </h3>
+
+                <p className="mt-3 max-w-sm text-sm leading-6 text-gray-500">
+                  Your thoughts have been added to our story.
+                </p>
+
+                <button
+                  onClick={() => setSubmitted(false)}
+                  className="group mt-8 inline-flex items-center gap-2 border-b border-[#B8923F]/50 pb-1 text-xs uppercase tracking-[0.15em] text-[#C9A24B] transition-colors hover:border-[#C9A24B]"
+                >
+                  Share another thought
+
+                  <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="p-7 md:p-9">
+
+                <div className="mb-8">
+                  <h3 className="font-serif text-2xl text-[#EDE6D9]">
+                    Leave a note.
+                  </h3>
+
+                  <p className="mt-2 text-sm leading-6 text-gray-500">
+                    Tell us what you enjoyed, what could be better, or what
+                    you'd love to experience next.
+                  </p>
+                </div>
+
+                <div className="space-y-7">
+
+                  {/* Name */}
                   <div>
-                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-stone-400">
-                      Your Name <span className="font-normal tracking-normal text-stone-600">(optional)</span>
+                    <label className="mb-2 block font-mono text-[9px] uppercase tracking-[0.18em] text-gray-600">
+                      Your name
+                      <span className="ml-2 normal-case tracking-normal text-gray-700">
+                        optional
+                      </span>
                     </label>
+
                     <div className="relative">
-                      <User className="absolute left-4 top-3.5 text-stone-500" size={16} />
+                      <User className="absolute left-0 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-600" />
+
                       <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="e.g., Priya Sharma"
-                        className="w-full rounded-xl border border-white/10 bg-[#0b0b0f] py-3 pl-12 pr-4 font-medium text-white placeholder:text-stone-600 transition-all duration-200 focus:border-amber-400/50 focus:outline-none focus:ring-1 focus:ring-amber-400/20"
+                        placeholder="Your name"
+                        className="w-full border-b border-white/[0.1] bg-transparent py-3 pl-7 pr-2 text-sm text-[#EDE6D9] outline-none transition-colors placeholder:text-gray-700 focus:border-[#B8923F]"
                       />
                     </div>
                   </div>
 
+                  {/* Message */}
                   <div>
-                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-stone-400">
-                      Your Feedback
-                    </label>
+                    <div className="mb-2 flex items-center justify-between">
+                      <label className="font-mono text-[9px] uppercase tracking-[0.18em] text-gray-600">
+                        Your feedback
+                      </label>
+
+                      <span className="font-mono text-[9px] text-gray-700">
+                        {message.length}/500
+                      </span>
+                    </div>
+
                     <textarea
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      rows={4}
+                      rows={6}
                       maxLength={500}
-                      placeholder="Tell us about your experience..."
-                      className="w-full resize-none rounded-xl border border-white/10 bg-[#0b0b0f] px-4 py-3 font-medium leading-relaxed text-white placeholder:text-stone-600 transition-all duration-200 focus:border-amber-400/50 focus:outline-none focus:ring-1 focus:ring-amber-400/20"
+                      placeholder="What did you take away from your experience?"
+                      className="w-full resize-none border-b border-white/[0.1] bg-transparent px-0 py-3 text-sm leading-7 text-[#EDE6D9] outline-none transition-colors placeholder:text-gray-700 focus:border-[#B8923F]"
                     />
-                    <p className="mt-1 text-right text-[10px] text-stone-600">
-                      {message.length}/500
-                    </p>
                   </div>
 
+                  {/* Submit */}
                   <button
                     onClick={handleSubmit}
                     disabled={submitting}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-amber-300/20 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-500 py-3.5 text-sm font-bold tracking-wide text-black shadow-[0_12px_30px_rgba(212,175,55,0.18)] transition-all duration-200 hover:from-amber-300 hover:via-yellow-400 hover:to-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="group flex w-full items-center justify-between border border-[#B8923F]/30 bg-[#B8923F]/[0.06] px-5 py-4 text-sm font-medium text-[#EDE6D9] transition-all duration-300 hover:border-[#B8923F]/70 hover:bg-[#B8923F]/[0.1] disabled:cursor-not-allowed disabled:opacity-50"
                   >
+                    <span>
+                      {submitting ? "Sending..." : "Share your feedback"}
+                    </span>
+
                     {submitting ? (
-                      <Loader2 size={16} className="animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin text-[#B8923F]" />
                     ) : (
-                      <Send size={16} />
+                      <Send className="h-4 w-4 text-[#B8923F] transition-transform duration-300 group-hover:translate-x-1" />
                     )}
-                    Submit Feedback
                   </button>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {/* Bottom accent */}
+            <div className="absolute bottom-0 left-0 h-px w-0 bg-[#B8923F] transition-all duration-500 hover:w-full" />
+          </div>
+        </div>
+
+        {/* Footer metadata */}
+        <div className="mt-8 flex flex-col gap-2 border-t border-white/[0.06] pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-gray-600">
+            Music · Mind · Community
+          </span>
+
+          <span className="text-xs text-gray-600">
+            Your feedback helps shape what comes next.
+          </span>
         </div>
       </div>
     </section>

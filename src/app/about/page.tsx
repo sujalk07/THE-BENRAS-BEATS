@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
+  ArrowUpRight,
   HeartHandshake,
   Users,
   Landmark,
@@ -31,47 +32,44 @@ const cormorant = Cormorant_Garamond({
 const cards = [
   {
     icon: HeartHandshake,
+    number: "01",
     title: "Mental Wellness",
     description:
       "Music has always been medicine. Every gathering is designed to help people slow down, reconnect with themselves, and experience moments of peace.",
-    border: "border-red-500/40",
-    glow: "bg-red-500/20",
-    iconBg: "from-red-500 via-rose-500 to-pink-500",
-    titleColor: "text-red-300",
   },
   {
     icon: Users,
+    number: "02",
     title: "Genuine Connection",
     description:
       "Every performance creates opportunities for people to meet, connect, and build meaningful friendships through music.",
-    border: "border-amber-500/40",
-    glow: "bg-amber-500/20",
-    iconBg: "from-yellow-400 via-amber-500 to-orange-500",
-    titleColor: "text-amber-300",
   },
   {
     icon: Landmark,
+    number: "03",
     title: "Community Growth",
     description:
       "Supporting independent artists while preserving the rich musical heritage and cultural identity of Banaras.",
-    border: "border-emerald-500/40",
-    glow: "bg-emerald-500/20",
-    iconBg: "from-emerald-400 via-green-500 to-teal-500",
-    titleColor: "text-emerald-300",
   },
 ];
 
 const changingMindsPoints = [
   {
     icon: GraduationCap,
+    number: "01",
+    title: "Experience",
     text: "Led by Dr. Laxman Ji Yadav, PhD from IMS BHU, with 8+ years of experience in psychotherapy and counseling.",
   },
   {
     icon: BrainCircuit,
+    number: "02",
+    title: "Evidence-based care",
     text: "Evidence-based treatment for anxiety, depression, stress, and relationship concerns using CBT, psychodynamic, and mindfulness-based approaches.",
   },
   {
     icon: ShieldCheck,
+    number: "03",
+    title: "A safe space",
     text: "A safe, confidential, non-judgmental space, with over fifty thousand counseling sessions completed to date.",
   },
 ];
@@ -80,181 +78,300 @@ export default function AboutPage() {
   const router = useRouter();
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#090704] text-white">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-40 top-0 h-[650px] w-[650px] rounded-full bg-amber-500/10 blur-[180px]" />
-        <div className="absolute right-[-180px] top-20 h-[650px] w-[650px] rounded-full bg-orange-500/10 blur-[180px]" />
-        <div className="absolute bottom-[-150px] left-1/2 h-[650px] w-[650px] -translate-x-1/2 rounded-full bg-yellow-500/10 blur-[200px]" />
-      </div>
+    <main className="min-h-screen overflow-hidden bg-[#0A0908] text-white">
 
-      <div className="relative z-10 mx-auto max-w-7xl px-6 py-10">
+      {/* =========================================================
+          HEADER
+      ========================================================= */}
+      <div className="mx-auto max-w-7xl px-6 pt-8">
         <button
           onClick={() => router.push("/")}
-          className="group inline-flex items-center gap-3 rounded-full border border-amber-500/20 bg-black/20 px-6 py-3 backdrop-blur-xl transition-all duration-300 hover:border-amber-400 hover:bg-black/30"
+          className="group inline-flex items-center gap-3 text-[10px] uppercase tracking-[0.25em] text-gray-500 transition-colors hover:text-[#C9A24B]"
         >
-          <ArrowLeft size={18} className="transition group-hover:-translate-x-1" />
-          <span className="text-sm uppercase tracking-[0.25em] text-amber-300">
-            Back Home
-          </span>
-        </button>
+          <ArrowLeft
+            size={15}
+            className="transition-transform duration-300 group-hover:-translate-x-1"
+          />
 
+          Back home
+        </button>
+      </div>
+
+      {/* =========================================================
+          HERO
+      ========================================================= */}
+      <section className="mx-auto max-w-6xl px-6 pb-20 pt-20 md:pb-28 md:pt-28">
         <motion.div
           initial={{ opacity: 0, y: 25 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="mx-auto mt-16 max-w-5xl text-center"
+          className="grid items-end gap-10 lg:grid-cols-[1fr_0.55fr]"
         >
-          <h1 className={`${playfair.className} text-5xl font-bold sm:text-6xl lg:text-7xl`}>
-            About
-            <span className="block bg-gradient-to-r from-yellow-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
-              The Benaras Beats
-            </span>
-          </h1>
+          <div>
+            <div className="mb-7 flex items-center gap-4">
+              <span className="h-px w-12 bg-[#B8923F]/70" />
 
-          <p className="mx-auto mt-10 max-w-4xl text-lg leading-9 text-gray-300">
-            Inspired by the timeless spirit of Banaras, The Benaras Beats is a community-driven musical 
-            initiative dedicated to celebrating local artists, meaningful performances and unforgettable cultural experiences.
-          </p>
+              <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-[#B8923F]">
+                Our Story
+              </span>
+            </div>
 
-          <p className="mx-auto mt-8 max-w-4xl text-lg leading-9 text-slate-300">
-            Our vision is to create evenings where music becomes a bridge between people, traditions and stories. Every performance is
-             thoughtfully curated to bring warmth, belonging and a sense of togetherness while showcasing the rich artistic heritage
-             of one of the world's oldest living cities.
-          </p>
+            <h1
+              className={`${playfair.className} text-5xl font-semibold leading-[0.95] tracking-tight text-[#EDE6D9] sm:text-6xl md:text-7xl`}
+            >
+              About
+              <br />
+
+              <span className={`${cormorant.className} italic text-[#C9A24B]`}>
+                The Benaras Beats
+              </span>
+            </h1>
+          </div>
+
+          <div className="border-l border-white/[0.08] pl-6 lg:pb-2">
+            <p className="text-sm leading-7 text-gray-400 md:text-base">
+              A community-driven musical initiative inspired by the timeless
+              spirit of Banaras.
+            </p>
+
+            <div className="mt-6 flex items-center gap-3 font-mono text-[9px] uppercase tracking-[0.2em] text-gray-600">
+              <span>Music</span>
+              <span className="text-[#B8923F]">·</span>
+              <span>Culture</span>
+              <span className="text-[#B8923F]">·</span>
+              <span>Community</span>
+            </div>
+          </div>
         </motion.div>
+      </section>
 
+      {/* =========================================================
+          INTRODUCTION
+      ========================================================= */}
+      <section className="border-y border-white/[0.06]">
+        <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 md:grid-cols-2 md:gap-20 md:py-20">
+
+          <p className="font-serif text-2xl leading-relaxed text-[#D9CBA0] md:text-3xl">
+            Inspired by the timeless spirit of Banaras, The Benaras Beats is
+            a community-driven musical initiative dedicated to celebrating
+            local artists, meaningful performances, and unforgettable cultural
+            experiences.
+          </p>
+
+          <p className="text-sm leading-7 text-gray-500 md:pt-2 md:text-base">
+            Our vision is to create evenings where music becomes a bridge
+            between people, traditions, and stories. Every performance is
+            thoughtfully curated to bring warmth, belonging, and a sense of
+            togetherness while showcasing the rich artistic heritage of one
+            of the world's oldest living cities.
+          </p>
+        </div>
+      </section>
+
+      {/* =========================================================
+          BANARAS IMAGE
+      ========================================================= */}
+      <section className="mx-auto max-w-7xl px-6 py-20 md:py-28">
         <motion.div
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, scale: 0.98 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="relative mt-20 overflow-hidden rounded-[36px] border border-amber-500/20 shadow-[0_25px_80px_rgba(0,0,0,.45)]"
+          className="relative overflow-hidden"
         >
           <Image
             src={bannerImg}
             alt="Benaras"
-            className="h-[700px] w-full object-cover"
+            className="h-[520px] w-full object-cover md:h-[680px]"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#090704]/70 via-transparent to-black/30" />
-          <div className="absolute bottom-0 left-0 h-48 w-full bg-gradient-to-t from-[#090704] to-transparent" />
+
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0A0908] via-transparent to-black/10" />
+
+          {/* Image caption */}
+          <div className="absolute bottom-7 left-7 right-7 flex items-end justify-between md:bottom-10 md:left-10 md:right-10">
+            <div>
+              <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#C9A24B]">
+                Banaras
+              </span>
+
+              <p
+                className={`${cormorant.className} mt-2 text-2xl italic text-[#EDE6D9] md:text-3xl`}
+              >
+                A city that has always had its own rhythm.
+              </p>
+            </div>
+
+            <span className="hidden font-mono text-[9px] tracking-[0.2em] text-white/40 md:block">
+              THE BENARAS BEATS / 01
+            </span>
+          </div>
         </motion.div>
+      </section>
 
-        <motion.section
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
-          className="mx-auto mt-28 max-w-6xl"
-        >
-          <div className="relative overflow-hidden rounded-[36px] border border-amber-500/20 bg-gradient-to-br from-[#18181b] via-[#111827] to-[#0f172a] p-8 shadow-[0_25px_70px_rgba(0,0,0,.35)] sm:p-12">
-            <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-amber-500/10 blur-[100px]" />
+      {/* =========================================================
+          CHANGING MINDS
+      ========================================================= */}
+      <section className="border-y border-white/[0.06]">
+        <div className="mx-auto max-w-6xl px-6 py-20 md:py-28">
 
-            <div className="relative grid gap-10 lg:grid-cols-5 lg:gap-12">
-              <div className="lg:col-span-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-400/80">
-                  A Child Initiative Of
-                </p>
-                <h2 className={`${cormorant.className} mt-3 text-3xl font-bold text-white sm:text-4xl`}>
-                  Changing Minds Mental Health Care
-                </h2>
-                <p className="mt-5 text-sm leading-relaxed text-slate-400 sm:text-base">
-                  The Benaras Beats is proudly rooted in{" "}
-                  <span className="font-medium text-white">
-                    Changing Minds Counseling & Psychotherapy Centre
-                  </span>
-                  , a trusted mental health center based in Varanasi, dedicated to helping people lead fulfilling, emotionally healthier lives-the very same mission that inspired this musical community.
-                </p>
+          <div className="grid gap-14 lg:grid-cols-[0.7fr_1.3fr] lg:gap-24">
 
-                <a
-                  href="https://changingminds.in"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-6 inline-flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-5 py-2.5 text-sm font-semibold text-amber-300 transition hover:border-amber-400/50 hover:bg-amber-500/20"
-                >
-                  Visit changingminds.in
-                  <ExternalLink size={14} />
-                </a>
-              </div>
+            {/* Left */}
+            <div>
+              <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#B8923F]">
+                Our Foundation
+              </span>
 
-              <div className="lg:col-span-3">
-                <div className="space-y-5">
-                  {changingMindsPoints.map((point, idx) => {
-                    const Icon = point.icon;
-                    return (
-                      <div
-                        key={idx}
-                        className="flex items-start gap-4 rounded-2xl border border-white/5 bg-white/[0.02] p-4"
-                      >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400">
-                          <Icon size={18} />
+              <h2
+                className={`${cormorant.className} mt-4 text-4xl font-semibold leading-tight text-[#EDE6D9] md:text-5xl`}
+              >
+                A child initiative of
+                <br />
+                <span className="italic text-[#C9A24B]">
+                  Changing Minds.
+                </span>
+              </h2>
+
+              <p className="mt-7 text-sm leading-7 text-gray-500">
+                The Benaras Beats is proudly rooted in Changing Minds
+                Counseling & Psychotherapy Centre — a trusted mental health
+                center based in Varanasi.
+              </p>
+
+              <a
+                href="https://changingminds.in"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group mt-8 inline-flex items-center gap-3 border-b border-[#B8923F]/50 pb-2 text-xs uppercase tracking-[0.15em] text-gray-400 transition-colors hover:border-[#C9A24B] hover:text-[#C9A24B]"
+              >
+                Visit changingminds.in
+
+                <ExternalLink
+                  size={13}
+                  className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                />
+              </a>
+            </div>
+
+            {/* Right */}
+            <div>
+              <div className="border-t border-white/[0.08]">
+                {changingMindsPoints.map((point) => {
+                  const Icon = point.icon;
+
+                  return (
+                    <div
+                      key={point.number}
+                      className="group flex gap-6 border-b border-white/[0.08] py-7"
+                    >
+                      <div className="flex w-8 shrink-0 flex-col items-center">
+                        <span className="font-mono text-[9px] text-gray-700">
+                          {point.number}
+                        </span>
+
+                        <div className="mt-5">
+                          <Icon className="h-5 w-5 text-[#B8923F]" />
                         </div>
-                        <p className="text-sm leading-relaxed text-slate-300">
+                      </div>
+
+                      <div>
+                        <h3 className="font-serif text-xl text-[#EDE6D9] transition-colors group-hover:text-[#C9A24B]">
+                          {point.title}
+                        </h3>
+
+                        <p className="mt-2 text-sm leading-6 text-gray-500">
                           {point.text}
                         </p>
                       </div>
-                    );
-                  })}
-                </div>
-
-                <p className="mt-6 text-sm leading-relaxed text-slate-400">
-                  Changing Minds believes that mental health is central to overall well-being. Its team offers personalized, evidence-based care in a confidential, judgment-free space and it's this same belief, that healing extends beyond the walls of a clinic, that gave rise to The Benaras Beats: bringing that same spirit of care into music, culture, and community.
-                </p>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
-          </div>
-        </motion.section>
 
-        <motion.section
-  initial={{ opacity: 0, y: 40 }}
-  whileInView={{ opacity: 1, y: 0 }}
-  viewport={{ once: true }}
-  transition={{ duration: 0.7 }}
-  className="mx-auto mt-28 max-w-6xl px-4"
->
-  <div className="text-center">
-    <h2 className={`${playfair.className} text-4xl font-bold sm:text-5xl`}>
-      Our Mission
-    </h2>
-    <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-gray-400">
-      At The Benaras Beats, every event, every artist we support, and every experience we create is inspired by a single purpose to bring people together through music while celebrating the rich cultural heritage of Banaras.
-    </p>
-  </div>
-
-  <div className="mt-16 grid gap-8 md:grid-cols-3">
-    {cards.map((card, index) => {
-      const Icon = card.icon;
-      return (
-        <motion.div
-          key={card.title}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.45, delay: index * 0.12 }}
-          whileHover={{ y: -6 }}
-          className="group rounded-2xl border border-white/8 bg-white/[0.02] p-6 transition-all duration-300 hover:border-amber-400/30 hover:bg-white/[0.035]"
-        >
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/[0.04] text-amber-400 ring-1 ring-white/10 transition group-hover:bg-amber-500/10 group-hover:ring-amber-400/20">
-              <Icon className="h-6 w-6" />
-            </div>
-
-            <div className="min-w-0">
-              <h3 className={`text-xl font-semibold ${card.titleColor}`}>
-                {card.title}
-              </h3>
-              <p className="mt-3 text-sm leading-7 text-slate-300">
-                {card.description}
+              <p className="mt-8 text-sm leading-7 text-gray-500">
+                Changing Minds believes that mental health is central to
+                overall well-being. Its team offers personalized,
+                evidence-based care in a confidential, judgment-free space.
+                This same belief — that healing extends beyond the walls of a
+                clinic — gave rise to The Benaras Beats: bringing that spirit
+                of care into music, culture, and community.
               </p>
             </div>
           </div>
-        </motion.div>
-      );
-    })}
-  </div>
-</motion.section>
+        </div>
+      </section>
 
-        <div className="h-24" />
-      </div>
+      {/* =========================================================
+          MISSION
+      ========================================================= */}
+      <section className="mx-auto max-w-6xl px-6 py-20 md:py-28">
+
+        <div className="mb-14 max-w-3xl">
+          <div className="mb-6 flex items-center gap-4">
+            <span className="h-px w-10 bg-[#B8923F]/70" />
+
+            <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-[#B8923F]">
+              What We Believe
+            </span>
+          </div>
+
+          <h2
+            className={`${playfair.className} text-4xl font-semibold text-[#EDE6D9] md:text-5xl`}
+          >
+            Our Mission
+          </h2>
+
+          <p className="mt-6 max-w-2xl text-sm leading-7 text-gray-500 md:text-base">
+            At The Benaras Beats, every event, every artist we support, and
+            every experience we create is inspired by a single purpose:
+            bringing people together through music while celebrating the rich
+            cultural heritage of Banaras.
+          </p>
+        </div>
+
+        {/* Mission principles */}
+        <div className="border-t border-white/[0.08]">
+          {cards.map((card, index) => {
+            const Icon = card.icon;
+
+            return (
+              <motion.div
+                key={card.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{
+                  duration: 0.5,
+                  delay: index * 0.1,
+                }}
+                className="group grid gap-6 border-b border-white/[0.08] py-8 md:grid-cols-[80px_280px_1fr] md:items-center"
+              >
+                <span className="font-mono text-[10px] tracking-[0.2em] text-gray-700">
+                  {card.number}
+                </span>
+
+                <div className="flex items-center gap-4">
+                  <Icon className="h-5 w-5 text-[#B8923F] transition-transform duration-300 group-hover:-translate-y-1" />
+
+                  <h3
+                    className={`${cormorant.className} text-2xl font-semibold text-[#EDE6D9] transition-colors group-hover:text-[#C9A24B]`}
+                  >
+                    {card.title}
+                  </h3>
+                </div>
+
+                <p className="max-w-2xl text-sm leading-7 text-gray-500">
+                  {card.description}
+                </p>
+              </motion.div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Bottom spacing */}
+      <div className="h-16" />
     </main>
   );
 }

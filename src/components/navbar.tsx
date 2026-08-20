@@ -6,14 +6,14 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import logo from "../assets/logo.png";
 import { User, Menu, X, LogOut, LayoutDashboard, UserCircle, ShieldCheck } from "lucide-react";
-import { Cormorant_Garamond } from "next/font/google";
+import { Playfair_Display } from "next/font/google";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { isAdminEmail } from "@/lib/admin";
 
-const cormorant = Cormorant_Garamond({
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
+  weight: ["600", "700"],
 });
 
 const navLinks = [
@@ -72,7 +72,6 @@ export default function Navbar() {
     <>
       <nav className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/80 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
-          
           {/* Logo */}
           <Link href="/" className="group flex items-center gap-4">
             <div className="relative h-10 w-10 overflow-hidden rounded-full border border-white/10 transition-transform duration-500 group-hover:scale-105">
@@ -86,11 +85,13 @@ export default function Navbar() {
               />
             </div>
             <div className="flex flex-col">
-              <h1 className={`${cormorant.className} text-2xl font-bold leading-none text-white lg:text-3xl`}>
+              <h1
+                className={`${playfair.className} text-2xl font-bold leading-none text-[#EDE6D9] lg:text-3xl`}
+              >
                 The Benaras Beats
               </h1>
-              <p className="mt-1 text-[10px] uppercase tracking-[0.25em] text-amber-400/80">
-                Music for Mind & Soul
+              <p className="mt-1 text-[10px] uppercase tracking-[0.25em] text-[#B8923F]/90">
+                Music for Mind &amp; Soul
               </p>
             </div>
           </Link>
@@ -104,12 +105,12 @@ export default function Navbar() {
                   key={link.name}
                   href={link.href}
                   className={`group relative text-sm font-medium uppercase tracking-widest transition-colors duration-300 ${
-                    isActive ? "text-amber-400" : "text-gray-300 hover:text-white"
+                    isActive ? "text-[#C9A24B]" : "text-gray-300 hover:text-white"
                   }`}
                 >
                   {link.name}
                   <span
-                    className={`absolute -bottom-2 left-0 h-[1px] w-full origin-left bg-amber-400 transition-transform duration-300 ${
+                    className={`absolute -bottom-2 left-0 h-[1px] w-full origin-left bg-[#C9A24B] transition-transform duration-300 ${
                       isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                     }`}
                   ></span>
@@ -128,7 +129,7 @@ export default function Navbar() {
                 <>
                   <button
                     onClick={() => setUserMenuOpen((prev) => !prev)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-white transition-all duration-300 hover:border-amber-400 hover:bg-amber-400/10 hover:text-amber-400"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-white transition-all duration-300 hover:border-[#C9A24B] hover:bg-[#C9A24B]/10 hover:text-[#C9A24B]"
                     aria-label="Account menu"
                     aria-expanded={userMenuOpen}
                   >
@@ -164,7 +165,7 @@ export default function Navbar() {
                           <Link
                             href="/admin"
                             onClick={() => setUserMenuOpen(false)}
-                            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-amber-400 transition hover:bg-amber-500/10"
+                            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#C9A24B] transition hover:bg-[#C9A24B]/10"
                           >
                             <ShieldCheck size={16} /> Admin Panel
                           </Link>
@@ -172,7 +173,7 @@ export default function Navbar() {
 
                         <button
                           onClick={handleLogout}
-                          className="mt-1 flex items-center gap-3 rounded-lg border-t border-white/5 px-3 py-2 pt-3 text-sm font-medium text-red-400 transition hover:bg-red-500/10"
+                          className="mt-1 flex items-center gap-3 rounded-lg border-t border-white/5 px-3 py-2 pt-3 text-sm font-medium text-[#C4707F] transition hover:bg-[#7A2331]/15"
                         >
                           <LogOut size={16} /> Logout
                         </button>
@@ -189,7 +190,7 @@ export default function Navbar() {
                         <Link
                           href="/signup"
                           onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-black transition hover:bg-amber-400"
+                          className="flex items-center rounded-lg bg-[#C9A24B] px-3 py-2 text-sm font-semibold text-[#0A0908] transition hover:bg-[#D9B662]"
                         >
                           Sign Up
                         </Link>
@@ -203,7 +204,7 @@ export default function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-white hover:text-amber-400 transition-colors md:hidden focus:outline-none"
+              className="text-white hover:text-[#C9A24B] transition-colors md:hidden focus:outline-none"
               aria-expanded={isOpen}
               aria-label="Toggle Menu"
             >
@@ -220,9 +221,9 @@ export default function Navbar() {
         }`}
       >
         {/* Backdrop overlay */}
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm" 
-          onClick={() => setIsOpen(false)} 
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+          onClick={() => setIsOpen(false)}
         />
 
         {/* Drawer Content */}
@@ -238,7 +239,7 @@ export default function Navbar() {
                   key={link.name}
                   href={link.href}
                   className={`text-base font-medium uppercase tracking-wider transition-colors ${
-                    isActive ? "text-amber-400" : "text-gray-300 hover:text-white"
+                    isActive ? "text-[#C9A24B]" : "text-gray-300 hover:text-white"
                   }`}
                 >
                   {link.name}
@@ -269,7 +270,7 @@ export default function Navbar() {
                 {isAdmin && (
                   <Link
                     href="/admin"
-                    className="flex items-center gap-3 text-sm font-medium text-amber-400 py-2"
+                    className="flex items-center gap-3 text-sm font-medium text-[#C9A24B] py-2"
                   >
                     <ShieldCheck size={18} /> Admin Panel
                   </Link>
@@ -277,7 +278,7 @@ export default function Navbar() {
 
                 <button
                   onClick={handleLogout}
-                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-red-500/30 px-4 py-2 text-sm text-red-400 transition hover:bg-red-500 hover:text-white"
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-[#7A2331]/50 px-4 py-2 text-sm text-[#C4707F] transition hover:bg-[#7A2331] hover:text-white"
                 >
                   <LogOut size={16} />
                   Logout
@@ -287,13 +288,13 @@ export default function Navbar() {
               <>
                 <Link
                   href="/login"
-                  className="flex w-full justify-center rounded-lg border border-white/20 px-4 py-2 text-sm text-white transition hover:border-amber-400 hover:text-amber-400"
+                  className="flex w-full justify-center rounded-lg border border-white/20 px-4 py-2 text-sm text-white transition hover:border-[#C9A24B] hover:text-[#C9A24B]"
                 >
                   Login
                 </Link>
                 <Link
                   href="/signup"
-                  className="flex w-full justify-center rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-400"
+                  className="flex w-full justify-center rounded-lg bg-[#C9A24B] px-4 py-2 text-sm font-semibold text-[#0A0908] transition hover:bg-[#D9B662]"
                 >
                   Sign Up
                 </Link>

@@ -1,4 +1,5 @@
 // app/admin/memberships/page.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -21,6 +22,7 @@ const todayISO = () => new Date().toISOString().slice(0, 10);
 
 export default function AdminMembershipsPage() {
   const { user } = useAuth();
+
   const [memberships, setMemberships] = useState<Membership[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -36,10 +38,18 @@ export default function AdminMembershipsPage() {
 
   const fetchMemberships = async () => {
     if (!user) return;
+
     try {
-      const res = await fetch(`/api/admin/memberships?userId=${user.id}`);
+      const res = await fetch(
+        `/api/admin/memberships?userId=${user.id}`,
+        { cache: "no-store" }
+      );
+
       const data = await res.json();
-      if (res.ok) setMemberships(data.memberships ?? []);
+
+      if (res.ok) {
+        setMemberships(data.memberships ?? []);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -49,21 +59,32 @@ export default function AdminMembershipsPage() {
 
   useEffect(() => {
     fetchMemberships();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const filtered = memberships.filter(
-    (m) =>
-      m.holder_name.toLowerCase().includes(search.toLowerCase()) ||
-      m.holder_email.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = memberships.filter((m) => {
+    const query = search.toLowerCase();
+
+    return (
+      m.holder_name.toLowerCase().includes(query) ||
+      m.holder_email.toLowerCase().includes(query)
+    );
+  });
 
   const formatDate = (dateStr: string | null) =>
-    dateStr ? new Date(dateStr).toLocaleDateString("en-IN", { dateStyle: "medium" }) : "—";
+    dateStr
+      ? new Date(dateStr).toLocaleDateString("en-IN", {
+          dateStyle: "medium",
+        })
+      : "—";
 
   const formatDateTime = (dateStr: string | null) =>
     dateStr
-      ? new Date(dateStr).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
+      ? new Date(dateStr).toLocaleString("en-IN", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        })
       : "—";
 
   const isExpired = (dateStr: string | null) =>
@@ -72,7 +93,10 @@ export default function AdminMembershipsPage() {
   const previewExpiry = (() => {
     const d = new Date(addStartDate || todayISO());
     d.setMonth(d.getMonth() + 6);
-    return d.toLocaleDateString("en-IN", { dateStyle: "medium" });
+
+    return d.toLocaleDateString("en-IN", {
+      dateStyle: "medium",
+    });
   })();
 
   const resetAddForm = () => {
@@ -85,6 +109,7 @@ export default function AdminMembershipsPage() {
 
   const handleAddMember = async () => {
     if (!user) return;
+
     setAddError(null);
 
     if (!addName.trim() || !addEmail.trim()) {
@@ -93,10 +118,13 @@ export default function AdminMembershipsPage() {
     }
 
     setAdding(true);
+
     try {
       const res = await fetch("/api/admin/memberships/add", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           userId: user.id,
           name: addName.trim(),
@@ -105,11 +133,18 @@ export default function AdminMembershipsPage() {
           startDate: addStartDate,
         }),
       });
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to add member.");
+
+      if (!res.ok) {
+        throw new Error(
+          data.error || "Failed to add member."
+        );
+      }
 
       setShowAddModal(false);
       resetAddForm();
+
       await fetchMemberships();
     } catch (err: any) {
       setAddError(err.message);
@@ -120,19 +155,37 @@ export default function AdminMembershipsPage() {
 
   const handleDelete = async (id: string, name: string) => {
     if (!user) return;
-    if (!confirm(`Delete ${name}'s membership? This cannot be undone.`)) return;
+
+    if (
+      !confirm(
+        `Delete ${name}'s membership? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
 
     setDeletingId(id);
+
     try {
-      const res = await fetch(`/api/admin/memberships/${id}?userId=${user.id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/admin/memberships/${id}?userId=${user.id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
       const data = await res.json();
+
       if (!res.ok) {
-        alert(data.error || "Failed to delete membership");
+        alert(
+          data.error || "Failed to delete membership"
+        );
         return;
       }
-      setMemberships((prev) => prev.filter((m) => m.id !== id));
+
+      setMemberships((prev) =>
+        prev.filter((m) => m.id !== id)
+      );
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -142,20 +195,28 @@ export default function AdminMembershipsPage() {
 
   return (
     <div>
-      <div className="flex items-start justify-between flex-wrap gap-4">
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Memberships</h1>
-          <p className="mt-2 text-gray-400">All member accounts and their plan status.</p>
+          <h1 className="text-3xl font-bold">
+            Memberships
+          </h1>
+
+          <p className="mt-2 text-gray-400">
+            All member accounts and their plan status.
+          </p>
         </div>
+
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-black hover:bg-amber-400 transition"
+          className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-black transition hover:bg-amber-400"
         >
           <Plus size={16} />
           Add Member
         </button>
       </div>
 
+      {/* Search */}
       <input
         type="text"
         placeholder="Search by name or email..."
@@ -164,12 +225,19 @@ export default function AdminMembershipsPage() {
         className="mt-6 w-full max-w-sm rounded-lg border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder-gray-500 focus:border-amber-500 focus:outline-none"
       />
 
+      {/* Content */}
       {loading ? (
-        <div className="mt-6 flex items-center gap-2 text-gray-500">
-          <Loader2 size={16} className="animate-spin" /> Loading memberships...
+        <div className="mt-8 flex items-center gap-2 text-gray-500">
+          <Loader2
+            size={16}
+            className="animate-spin"
+          />
+          Loading memberships...
         </div>
       ) : filtered.length === 0 ? (
-        <p className="mt-6 text-gray-500">No memberships found.</p>
+        <p className="mt-8 text-gray-500">
+          No memberships found.
+        </p>
       ) : (
         <div className="mt-6 overflow-x-auto rounded-xl border border-white/10">
           <table className="w-full text-sm">
@@ -182,17 +250,32 @@ export default function AdminMembershipsPage() {
                 <th className="p-3 font-medium">Expiry</th>
                 <th className="p-3 font-medium">Amount</th>
                 <th className="p-3 font-medium">Created With</th>
-                <th className="p-3 font-medium">Purchased At</th>
-                <th className="p-3 font-medium text-right">Actions</th>
+                <th className="p-3 font-medium">
+                  Purchased At
+                </th>
+                <th className="p-3 text-right font-medium">
+                  Actions
+                </th>
               </tr>
             </thead>
+
             <tbody>
               {filtered.map((m) => {
                 const expired = isExpired(m.expires_at);
+
                 return (
-                  <tr key={m.id} className="border-t border-white/5">
-                    <td className="p-3 font-medium">{m.holder_name}</td>
-                    <td className="p-3 text-gray-400">{m.holder_email}</td>
+                  <tr
+                    key={m.id}
+                    className="border-t border-white/5"
+                  >
+                    <td className="p-3 font-medium">
+                      {m.holder_name}
+                    </td>
+
+                    <td className="p-3 text-gray-400">
+                      {m.holder_email}
+                    </td>
+
                     <td className="p-3">
                       <span
                         className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase ${
@@ -201,34 +284,60 @@ export default function AdminMembershipsPage() {
                             : "bg-red-500/10 text-red-400"
                         }`}
                       >
-                        {m.status === "active" && !expired ? "Active" : expired ? "Expired" : m.status}
+                        {m.status === "active" && !expired
+                          ? "Active"
+                          : expired
+                          ? "Expired"
+                          : m.status}
                       </span>
                     </td>
-                    <td className="p-3 text-gray-400">{formatDate(m.starts_at)}</td>
-                    <td className="p-3 text-gray-400">{formatDate(m.expires_at)}</td>
-                    <td className="p-3 text-gray-400">₹{m.amount}</td>
+
+                    <td className="p-3 text-gray-400">
+                      {formatDate(m.starts_at)}
+                    </td>
+
+                    <td className="p-3 text-gray-400">
+                      {formatDate(m.expires_at)}
+                    </td>
+
+                    <td className="p-3 text-gray-400">
+                      ₹{m.amount}
+                    </td>
+
                     <td className="p-3">
-  <span
-    className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase ${
-      m.created_with === "admin"
-        ? "bg-blue-500/10 text-blue-400"
-        : m.created_with === "qr"
-        ? "bg-purple-500/10 text-purple-400"
-        : "bg-amber-500/10 text-amber-400"
-    }`}
-  >
-    {m.created_with}
-  </span>
-</td>
-                    <td className="p-3 text-gray-500">{formatDateTime(m.created_at)}</td>
+                      <span
+                        className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase ${
+                          m.created_with === "admin"
+                            ? "bg-blue-500/10 text-blue-400"
+                            : m.created_with === "qr"
+                            ? "bg-purple-500/10 text-purple-400"
+                            : "bg-amber-500/10 text-amber-400"
+                        }`}
+                      >
+                        {m.created_with}
+                      </span>
+                    </td>
+
+                    <td className="p-3 text-gray-500">
+                      {formatDateTime(m.created_at)}
+                    </td>
+
                     <td className="p-3 text-right">
                       <button
-                        onClick={() => handleDelete(m.id, m.holder_name)}
+                        onClick={() =>
+                          handleDelete(
+                            m.id,
+                            m.holder_name
+                          )
+                        }
                         disabled={deletingId === m.id}
-                        className="rounded-lg border border-white/10 p-2 text-gray-300 hover:border-red-500/40 hover:text-red-400 transition disabled:opacity-50"
+                        className="rounded-lg border border-white/10 p-2 text-gray-300 transition hover:border-red-500/40 hover:text-red-400 disabled:opacity-50"
                       >
                         {deletingId === m.id ? (
-                          <Loader2 size={14} className="animate-spin" />
+                          <Loader2
+                            size={14}
+                            className="animate-spin"
+                          />
                         ) : (
                           <Trash2 size={14} />
                         )}
@@ -244,82 +353,136 @@ export default function AdminMembershipsPage() {
 
       {/* Add Member Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1f232d] p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-white">Add Member Manually</h2>
+            {/* Modal Header */}
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-white">
+                Add Member Manually
+              </h2>
+
               <button
                 onClick={() => {
                   setShowAddModal(false);
                   resetAddForm();
                 }}
-                className="text-gray-500 hover:text-white transition"
+                className="text-gray-500 transition hover:text-white"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <label className="block text-sm text-gray-300 mb-1.5">Name</label>
+            {/* Name */}
+            <label className="mb-1.5 block text-sm text-gray-300">
+              Name
+            </label>
+
             <input
               type="text"
               value={addName}
-              onChange={(e) => setAddName(e.target.value)}
+              onChange={(e) =>
+                setAddName(e.target.value)
+              }
               placeholder="Full name"
-              className="w-full mb-4 rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder-gray-500 focus:border-amber-500 focus:outline-none"
+              className="mb-4 w-full rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder-gray-500 focus:border-amber-500 focus:outline-none"
             />
 
-            <label className="block text-sm text-gray-300 mb-1.5">Email</label>
+            {/* Email */}
+            <label className="mb-1.5 block text-sm text-gray-300">
+              Email
+            </label>
+
             <input
               type="email"
               value={addEmail}
-              onChange={(e) => setAddEmail(e.target.value)}
+              onChange={(e) =>
+                setAddEmail(e.target.value)
+              }
               placeholder="member@example.com"
-              className="w-full mb-4 rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder-gray-500 focus:border-amber-500 focus:outline-none"
+              className="mb-4 w-full rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white placeholder-gray-500 focus:border-amber-500 focus:outline-none"
             />
 
-            <div className="grid grid-cols-2 gap-3 mb-1">
+            {/* Amount + Start Date */}
+            <div className="mb-1 grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm text-gray-300 mb-1.5">Amount (₹)</label>
+                <label className="mb-1.5 block text-sm text-gray-300">
+                  Amount (₹)
+                </label>
+
                 <input
                   type="number"
+                  min="0"
                   value={addAmount}
-                  onChange={(e) => setAddAmount(e.target.value)}
+                  onChange={(e) =>
+                    setAddAmount(e.target.value)
+                  }
                   className="w-full rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white focus:border-amber-500 focus:outline-none"
                 />
               </div>
+
               <div>
-                <label className="block text-sm text-gray-300 mb-1.5">Start Date</label>
+                <label className="mb-1.5 block text-sm text-gray-300">
+                  Start Date
+                </label>
+
                 <input
                   type="date"
                   value={addStartDate}
-                  onChange={(e) => setAddStartDate(e.target.value)}
+                  onChange={(e) =>
+                    setAddStartDate(e.target.value)
+                  }
                   className="w-full rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-sm text-white focus:border-amber-500 focus:outline-none"
                 />
               </div>
             </div>
 
-            <p className="mt-3 mb-2 text-xs text-gray-500">
-              Membership will expire on <span className="text-amber-400 font-medium">{previewExpiry}</span> (6 months from start date).
+            {/* Expiry Preview */}
+            <p className="mb-2 mt-3 text-xs text-gray-500">
+              Membership will expire on{" "}
+              <span className="font-medium text-amber-400">
+                {previewExpiry}
+              </span>{" "}
+              (6 months from start date).
             </p>
 
-            {addError && <p className="mb-3 text-sm text-red-400">{addError}</p>}
+            {/* Error */}
+            {addError && (
+              <p className="mb-3 text-sm text-red-400">
+                {addError}
+              </p>
+            )}
 
+            {/* Actions */}
             <div className="mt-4 flex gap-3">
               <button
                 onClick={() => {
                   setShowAddModal(false);
                   resetAddForm();
                 }}
-                className="flex-1 rounded-xl border border-white/10 py-3 text-sm font-semibold text-gray-300 hover:bg-white/5 transition"
+                className="flex-1 rounded-xl border border-white/10 py-3 text-sm font-semibold text-gray-300 transition hover:bg-white/5"
               >
                 Cancel
               </button>
+
               <button
                 onClick={handleAddMember}
                 disabled={adding}
-                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-sm font-bold text-black hover:bg-amber-400 transition disabled:opacity-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-sm font-bold text-black transition hover:bg-amber-400 disabled:opacity-50"
               >
-                {adding ? <Loader2 size={16} className="animate-spin" /> : "Add Member"}
+                {adding ? (
+                  <>
+                    <Loader2
+                      size={16}
+                      className="animate-spin"
+                    />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Plus size={16} />
+                    Add Member
+                  </>
+                )}
               </button>
             </div>
           </div>

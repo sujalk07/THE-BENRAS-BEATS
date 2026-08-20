@@ -2,7 +2,13 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Mic2, ArrowRight, Guitar, Mic } from "lucide-react";
+import {
+  Mic2,
+  ArrowUpRight,
+  Guitar,
+  Mic,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
 
 import sticker from "@/assets/sticker.png";
@@ -12,112 +18,198 @@ export default function PerformerSection() {
   const { user } = useAuth();
   const isLoggedIn = !!user;
 
-  const [artistType, setArtistType] = useState<"singer" | "instrumentalist">("singer");
+  const [artistType, setArtistType] = useState<
+    "singer" | "instrumentalist"
+  >("singer");
 
   const performerUrl = isLoggedIn
     ? `/performer/apply?type=${artistType}`
-    : `/signup?redirectTo=${encodeURIComponent(`/performer/apply?type=${artistType}`)}`;
+    : `/signup?redirectTo=${encodeURIComponent(
+        `/performer/apply?type=${artistType}`
+      )}`;
 
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050508] px-4 py-4">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-600/10 blur-[140px]" />
-        <div className="absolute right-0 bottom-0 h-[400px] w-[400px] rounded-full bg-amber-500/10 blur-[160px]" />
+    <section className="relative overflow-hidden border-t border-white/[0.06] bg-[#0A0908] px-6 py-24 text-white">
+
+      {/* Background atmosphere */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-[15%] top-1/2 h-[450px] w-[450px] -translate-y-1/2 rounded-full bg-[#B8923F]/[0.035] blur-[140px]" />
+        <div className="absolute bottom-0 right-[10%] h-[300px] w-[300px] rounded-full bg-[#7A2331]/[0.035] blur-[120px]" />
       </div>
 
-      <div className="relative mx-auto w-full max-w-6xl overflow-hidden rounded-[32px] border border-purple-500/20 bg-gradient-to-br from-[#0b0b14] via-[#090911] to-[#050508] shadow-[0_0_80px_rgba(168,85,247,0.12)]">
-        <div className="relative min-h-[460px] flex items-center justify-between gap-10 px-6 py-16 md:px-20 md:py-24">
-          <div className="relative z-20 w-full max-w-2xl text-left flex flex-col items-start">
-            <motion.h2
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className="bg-gradient-to-b from-white via-gray-100 to-purple-300/80 bg-clip-text font-serif text-5xl font-medium leading-tight text-transparent md:text-6xl"
-            >
-              Want to
-              <br />
-              Perform?
-            </motion.h2>
+      <div className="relative mx-auto max-w-6xl">
 
-            <motion.p
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              viewport={{ once: true }}
-              className="mt-4 max-w-md text-left text-base leading-6 text-purple-200/70 md:text-lg mix-blend-plus-lighting"
-            >
-              Are you a musician interested in performing at{" "}
-              <span className="font-semibold text-amber-300 shadow-amber-500/10">
-                The Benaras Beats
-              </span>
-              ? Showcase your talent, connect with audiences, and become part of
-              our vibrant artist community.
-            </motion.p>
+        {/* Small section identity */}
+        <div className="mb-10 flex items-center gap-4">
+          <span className="h-px w-12 bg-[#B8923F]/70" />
 
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              viewport={{ once: true }}
-              className="mt-6 flex flex-col items-start gap-3 w-full"
-            >
-              <Link
-                href={performerUrl}
-                className="relative group overflow-hidden rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 font-semibold text-black shadow-[0_0_20px_rgba(245,158,11,0.25)] transition-all duration-300 hover:from-amber-400 hover:to-amber-500 hover:shadow-[0_0_35px_rgba(245,158,11,0.6)] active:scale-[0.98] inline-flex items-center gap-3 text-base"
-              >
-                <Mic2 className="h-5 w-5" />
-                <span>Apply as Artist</span>
-                <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
+          <span className="text-[10px] uppercase tracking-[0.3em] text-[#B8923F]">
+            For Artists
+          </span>
 
-              {/* Artist type selector */}
-              <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] p-1">
-                <button
-                  type="button"
-                  onClick={() => setArtistType("singer")}
-                  className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-                    artistType === "singer"
-                      ? "bg-amber-500 text-black"
-                      : "text-gray-400 hover:text-white"
-                  }`}
-                >
-                  <Mic size={13} />
-                  Singer
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setArtistType("instrumentalist")}
-                  className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-                    artistType === "instrumentalist"
-                      ? "bg-amber-500 text-black"
-                      : "text-gray-400 hover:text-white"
-                  }`}
-                >
-                  <Guitar size={13} />
-                  Instrumentalist
-                </button>
-              </div>
-            </motion.div>
-          </div>
-
-          <motion.img
-            src={sticker.src}
-            alt="Artist Illustration"
-            animate={{
-              y: [0, -10, 0],
-              rotate: [-2, 2, -2],
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="absolute right-2 top-1/2 z-10 h-[320px] w-[320px] select-none object-contain drop-shadow-[0_0_25px_rgba(255,160,60,0.16)] md:right-4 md:h-[420px] md:w-[420px] -translate-y-1/2"
-          />
+          <span className="font-mono text-[9px] tracking-[0.15em] text-gray-700">
+            TBB / STAGE
+          </span>
         </div>
 
-        <div className="absolute bottom-0 left-0 h-[1px] w-full bg-gradient-to-r from-transparent via-purple-500/60 to-transparent" />
+        {/* Main artist poster */}
+        <div className="relative overflow-hidden border border-white/[0.08] bg-[#11100E]">
+
+          {/* Top metadata bar */}
+          <div className="flex items-center justify-between border-b border-white/[0.07] px-6 py-4 md:px-8">
+            <span className="font-mono text-[9px] tracking-[0.2em] text-gray-600">
+              THE BENARAS BEATS
+            </span>
+
+            <span className="flex items-center gap-2 text-[9px] uppercase tracking-[0.2em] text-[#B8923F]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#B8923F]" />
+              Open Call
+            </span>
+          </div>
+
+          <div className="grid min-h-[520px] lg:grid-cols-[1fr_0.8fr]">
+
+            {/* LEFT — Copy */}
+            <div className="relative z-20 flex flex-col justify-center px-7 py-14 md:px-12 lg:px-16">
+
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                viewport={{ once: true }}
+              >
+                <span className="mb-5 block font-mono text-[10px] uppercase tracking-[0.2em] text-gray-600">
+                  The stage is waiting.
+                </span>
+
+                <h2 className="max-w-xl font-serif text-5xl leading-[0.95] tracking-wide text-[#EDE6D9] md:text-6xl lg:text-7xl">
+                  Bring your
+                  <br />
+                  <span className="italic text-[#C9A24B]">
+                    sound.
+                  </span>
+                </h2>
+
+                <p className="mt-7 max-w-lg text-sm leading-7 text-gray-400 md:text-base">
+                  Are you a singer or instrumentalist looking for a space
+                  to perform? Bring your music to The Benaras Beats and
+                  become part of a growing community of artists and
+                  listeners.
+                </p>
+              </motion.div>
+
+              {/* Artist type selector */}
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15, duration: 0.5 }}
+                viewport={{ once: true }}
+                className="mt-9"
+              >
+                <span className="mb-3 block text-[9px] uppercase tracking-[0.2em] text-gray-600">
+                  I perform as a
+                </span>
+
+                <div className="inline-flex border border-white/[0.08] bg-[#0D0C0A] p-1">
+                  <button
+                    type="button"
+                    onClick={() => setArtistType("singer")}
+                    className={`flex items-center gap-2 px-5 py-2.5 text-xs font-medium transition-all duration-300 ${
+                      artistType === "singer"
+                        ? "bg-[#C9A24B] text-[#0A0908]"
+                        : "text-gray-500 hover:text-gray-200"
+                    }`}
+                  >
+                    <Mic className="h-3.5 w-3.5" />
+                    Singer
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setArtistType("instrumentalist")}
+                    className={`flex items-center gap-2 px-5 py-2.5 text-xs font-medium transition-all duration-300 ${
+                      artistType === "instrumentalist"
+                        ? "bg-[#C9A24B] text-[#0A0908]"
+                        : "text-gray-500 hover:text-gray-200"
+                    }`}
+                  >
+                    <Guitar className="h-3.5 w-3.5" />
+                    Instrumentalist
+                  </button>
+                </div>
+              </motion.div>
+
+              {/* CTA */}
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25, duration: 0.5 }}
+                viewport={{ once: true }}
+                className="mt-7"
+              >
+                <Link
+                  href={performerUrl}
+                  className="group inline-flex items-center gap-3 border-b border-[#B8923F]/60 pb-2 text-sm font-semibold text-[#EDE6D9] transition-colors duration-300 hover:border-[#C9A24B] hover:text-[#C9A24B]"
+                >
+                  <Mic2 className="h-4 w-4 text-[#B8923F]" />
+
+                  <span>Apply to perform</span>
+
+                  <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                </Link>
+              </motion.div>
+            </div>
+
+            {/* RIGHT — Artist visual */}
+            <div className="relative flex min-h-[360px] items-center justify-center overflow-hidden border-t border-white/[0.07] bg-[#0D0C0A] lg:border-l lg:border-t-0">
+
+              {/* Decorative rings */}
+              <div className="absolute h-[360px] w-[360px] rounded-full border border-white/[0.04]" />
+              <div className="absolute h-[260px] w-[260px] rounded-full border border-[#B8923F]/[0.08]" />
+
+              {/* Vertical typography */}
+              <span className="absolute bottom-8 right-6 font-serif text-[10px] uppercase tracking-[0.35em] text-gray-700 [writing-mode:vertical-rl]">
+                MUSIC · MIND · SOUL
+              </span>
+
+              {/* Illustration */}
+              <motion.img
+                src={sticker.src}
+                alt="Artist illustration"
+                animate={{
+                  y: [0, -10, 0],
+                  rotate: [-2, 2, -2],
+                }}
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="relative z-10 h-[300px] w-[300px] select-none object-contain drop-shadow-[0_20px_35px_rgba(0,0,0,0.45)] md:h-[380px] md:w-[380px]"
+              />
+
+              {/* Decorative label */}
+              <div className="absolute left-6 top-6 flex items-center gap-2 border border-white/[0.08] bg-[#11100E] px-3 py-2">
+                <Sparkles className="h-3 w-3 text-[#B8923F]" />
+
+                <span className="font-mono text-[8px] uppercase tracking-[0.15em] text-gray-500">
+                  Your stage
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom strip */}
+          <div className="flex flex-col gap-3 border-t border-white/[0.07] px-6 py-4 sm:flex-row sm:items-center sm:justify-between md:px-8">
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-gray-600">
+              Sing · Play · Perform
+            </span>
+
+            <span className="text-xs text-gray-600">
+              Tell us what you bring to the stage.
+            </span>
+          </div>
+        </div>
       </div>
     </section>
   );

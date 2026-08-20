@@ -1,69 +1,165 @@
-import React from 'react';
-import { Music4 } from 'lucide-react';
-import { FaInstagram, FaFacebook, FaYoutube } from "react-icons/fa6";
+"use client";
+
+import React from "react";
+import { ArrowUpRight, Music4 } from "lucide-react";
+import {
+  FaInstagram,
+  FaFacebook,
+  FaYoutube,
+} from "react-icons/fa6";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
-  return (
-    <footer className="relative bg-[#050508] text-white border-t border-gray-900/60 px-6 py-12 overflow-hidden">
-      <div className="absolute bottom-0 right-12 w-72 h-72 bg-purple-900/5 blur-[100px] pointer-events-none rounded-full" />
+  const links = [
+    { label: "About", href: "/about" },
+    { label: "Contact", href: "/contact" },
+    { label: "Terms", href: "/terms" },
+    { label: "Privacy", href: "/privacy" },
+    { label: "Refunds", href: "/refund-policy" },
+    { label: "Delivery", href: "/delivery-policy" },
+  ];
 
-      <div className="relative mx-auto max-w-7xl">
-        <div className="flex flex-col md:flex-row items-center md:justify-between gap-8 pb-8 border-b border-gray-900/40 text-center md:text-left">
-          <div className="flex flex-col items-center md:items-start gap-2 max-w-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
-                <Music4 className="w-4 h-4" />
-              </div>
-              <h3 className="text-xl font-serif font-medium tracking-wide text-gray-100">
-                The Benaras Beats
-              </h3>
-            </div>
-            <p className="text-sm text-gray-400 leading-relaxed">
-              Building communities through music and culture. Nurturing divine traditions and local creators.
-            </p>
+  return (
+    <footer className="relative overflow-hidden bg-[#0A0908] text-white">
+
+      {/* Decorative background */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute bottom-[-220px] left-1/2 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-[#B8923F]/[0.035] blur-[140px]" />
+
+        <div className="absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-[#B8923F]/30 to-transparent" />
+      </div>
+
+      <div className="relative mx-auto max-w-7xl px-6">
+
+        {/* MASSIVE CLOSING STATEMENT */}
+        <div className="relative border-b border-white/[0.07] py-20 md:py-28">
+
+          {/* Small identity */}
+          <div className="mb-10 flex items-center gap-4">
+            <Music4 className="h-4 w-4 text-[#B8923F]" />
+
+            <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-gray-600">
+              The Benaras Beats
+            </span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <h2 className="max-w-6xl font-serif text-[15vw] leading-[0.78] tracking-[-0.04em] text-[#EDE6D9] md:text-[9rem]">
+            Keep the
+            <br />
+            <span className="italic text-[#C9A24B]">
+              music alive.
+            </span>
+          </h2>
+
+          {/* Bottom part of hero footer */}
+          <div className="mt-14 flex flex-col justify-between gap-8 md:flex-row md:items-end">
+
+            <p className="max-w-md text-sm leading-7 text-gray-500">
+              A community built around music, culture, artists, and the
+              timeless spirit of Benaras.
+            </p>
+
             <a
-              href="https://www.instagram.com/thebenarasbeats?igsh=MXZzMjRldHFzbzFqdQ=="
-              aria-label="Instagram"
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-900/40 border border-gray-800/80 text-gray-400 hover:text-amber-400 hover:border-amber-500/30 hover:shadow-[0_0_15px_rgba(245,158,11,0.1)] transition-all duration-300"
+              href="#top"
+              className="group inline-flex items-center gap-3 self-start border-b border-[#B8923F]/40 pb-2 text-xs uppercase tracking-[0.18em] text-gray-400 transition-colors hover:border-[#C9A24B] hover:text-[#C9A24B]"
             >
-              <FaInstagram className="w-4 h-4" />
-            </a>
-            <a
-              href="https://www.facebook.com/share/18cWLBSfN2/"
-              aria-label="Facebook"
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-900/40 border border-gray-800/80 text-gray-400 hover:text-cyan-400 hover:border-cyan-500/30 hover:shadow-[0_0_15px_rgba(34,211,238,0.1)] transition-all duration-300"
-            >
-              <FaFacebook className="w-4 h-4" />
-            </a>
-            <a
-              href="#"
-              aria-label="YouTube"
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-900/40 border border-gray-800/80 text-gray-400 hover:text-rose-500 hover:border-rose-500/30 hover:shadow-[0_0_15px_rgba(244,63,94,0.1)] transition-all duration-300"
-            >
-              <FaYoutube className="w-4 h-4" />
+              Back to top
+
+              <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
             </a>
           </div>
         </div>
 
+        {/* LOWER FOOTER */}
+        <div className="grid gap-10 border-b border-white/[0.07] py-10 md:grid-cols-[1fr_auto] md:items-start">
 
+          {/* Brand */}
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center border border-[#B8923F]/25 bg-[#B8923F]/[0.05]">
+                <Music4 className="h-4 w-4 text-[#B8923F]" />
+              </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 text-xs text-gray-500 tracking-wide">
-          <p>© {currentYear} The Benaras Beats. All rights reserved.</p>
+              <div>
+                <span className="block font-serif text-lg text-[#EDE6D9]">
+                  The Benaras Beats
+                </span>
 
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            <a href="/about" className="hover:text-gray-300 transition-colors">About</a>
-            <a href="/terms" className="hover:text-gray-300 transition-colors">Terms &amp; Conditions</a>
-            <a href="/privacy" className="hover:text-gray-300 transition-colors">Privacy Policy</a>
-            <a href="/refund-policy" className="hover:text-gray-300 transition-colors">Refund Policy</a>
-            <a href="/delivery-policy" className="hover:text-gray-300 transition-colors">Delivery Policy</a>
-            <a href="/contact" className="hover:text-gray-300 transition-colors">Contact Us</a>
-
+                <span className="block text-[8px] uppercase tracking-[0.2em] text-gray-600">
+                  Music for Mind & Soul
+                </span>
+              </div>
+            </div>
           </div>
+
+          {/* Socials */}
+          <div className="flex items-center gap-6">
+            <a
+              href="https://www.instagram.com/thebenarasbeats?igsh=MXZzMjRldHFzbzFqdQ=="
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+              className="text-gray-600 transition-colors hover:text-[#C9A24B]"
+            >
+              <FaInstagram className="h-4 w-4" />
+            </a>
+
+            <a
+              href="https://www.facebook.com/share/18cWLBSfN2/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+              className="text-gray-600 transition-colors hover:text-[#C9A24B]"
+            >
+              <FaFacebook className="h-4 w-4" />
+            </a>
+
+            <a
+              href="#"
+              aria-label="YouTube"
+              className="text-gray-600 transition-colors hover:text-[#C9A24B]"
+            >
+              <FaYoutube className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
+
+        {/* NAVIGATION */}
+        <div className="flex flex-col gap-7 border-b border-white/[0.07] py-8 md:flex-row md:items-center md:justify-between">
+
+          <nav className="flex flex-wrap gap-x-7 gap-y-3">
+            {links.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="text-[10px] uppercase tracking-[0.12em] text-gray-600 transition-colors hover:text-[#EDE6D9]"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-3 text-[9px] uppercase tracking-[0.15em] text-gray-700">
+            <span>Varanasi</span>
+            <span className="h-1 w-1 rounded-full bg-[#B8923F]/50" />
+            <span>India</span>
+          </div>
+        </div>
+
+        {/* COPYRIGHT */}
+        <div className="flex flex-col gap-3 py-6 text-[9px] uppercase tracking-[0.15em] text-gray-700 sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            © {currentYear} The Benaras Beats
+          </span>
+
+          <span>
+            Music · Culture · Community
+          </span>
+
+          <span>
+            All rights reserved
+          </span>
         </div>
       </div>
     </footer>

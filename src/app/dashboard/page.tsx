@@ -1,11 +1,10 @@
-// app/dashboard/page.tsx
 "use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Ticket, Crown, ArrowLeft, ArrowUpRight } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { Ticket, Crown, ArrowLeft } from "lucide-react";
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
@@ -19,54 +18,102 @@ export default function DashboardPage() {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen bg-[#0B0C10] flex items-center justify-center text-gray-400">
-        Loading dashboard...
+      <div className="flex min-h-screen items-center justify-center bg-[#0A0908] text-gray-500">
+        Loading...
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#0B0C10] px-6 py-10 text-white">
-      <div className="mx-auto max-w-6xl">
-        <button
-          type="button"
-          onClick={() => router.push("/")}
-          className="mb-8 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-amber-400 transition hover:bg-white/10 hover:text-amber-300"
-          aria-label="Back to home"
-        >
-          <ArrowLeft size={16} />
-          Back to Home
-        </button>
+    <main className="min-h-screen bg-[#0A0908] px-5 py-8 text-white">
+      <div className="mx-auto max-w-3xl">
 
-        <h1 className="text-4xl font-bold tracking-tight">
-          Dashboard
-        </h1>
-        <p className="mt-2 text-gray-400">
-          Welcome back, {user.email}
-        </p>
+        {/* Header */}
+        <div className="mb-10 flex items-center justify-between">
+          <button
+            onClick={() => router.push("/")}
+            className="flex items-center gap-2 text-xs text-gray-500 transition hover:text-[#C9A24B]"
+          >
+            <ArrowLeft size={15} />
+            Back
+          </button>
 
-        <div className="mt-8 grid gap-6 sm:grid-cols-2">
+          <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-gray-700">
+            TBB / Dashboard
+          </span>
+        </div>
+
+        {/* Welcome */}
+        <div className="mb-8">
+          <span className="text-[9px] uppercase tracking-[0.25em] text-[#B8923F]">
+            Member Area
+          </span>
+
+          <h1 className="mt-2 font-serif text-4xl text-[#EDE6D9]">
+            Welcome back.
+          </h1>
+
+          <p className="mt-2 text-sm text-gray-500">
+            {user.email}
+          </p>
+        </div>
+
+        {/* Dashboard */}
+        <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#11100E]">
+
           <Link
             href="/dashboard/tickets"
-            className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 hover:border-amber-500/40 transition-colors"
+            className="group flex items-center gap-5 border-b border-white/[0.08] p-5 transition hover:bg-white/[0.025]"
           >
-            <Ticket className="text-amber-400" />
-            <h2 className="mt-4 text-xl font-semibold">Events</h2>
-            <p className="mt-2 text-sm text-gray-400">
-              View your registered events and upcoming access.
-            </p>
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#B8923F]/[0.08] text-[#C9A24B]">
+              <Ticket size={19} />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <h2 className="font-serif text-xl text-[#EDE6D9]">
+                Events
+              </h2>
+
+              <p className="mt-1 text-xs text-gray-500">
+                View registered events and tickets.
+              </p>
+            </div>
+
+            <ArrowUpRight
+              size={17}
+              className="text-gray-700 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#C9A24B]"
+            />
           </Link>
 
           <Link
             href="/dashboard/members"
-            className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 hover:border-amber-500/40 transition-colors"
+            className="group flex items-center gap-5 p-5 transition hover:bg-white/[0.025]"
           >
-            <Crown className="text-amber-400" />
-            <h2 className="mt-4 text-xl font-semibold">Members</h2>
-            <p className="mt-2 text-sm text-gray-400">
-              See our esteemed members and the full member directory.
-            </p>
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-400/[0.07] text-violet-300">
+              <Crown size={19} />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <h2 className="font-serif text-xl text-[#EDE6D9]">
+                Members
+              </h2>
+
+              <p className="mt-1 text-xs text-gray-500">
+                Explore the Benaras Beats community.
+              </p>
+            </div>
+
+            <ArrowUpRight
+              size={17}
+              className="text-gray-700 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-violet-300"
+            />
           </Link>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-6 flex justify-between text-[9px] uppercase tracking-[0.15em] text-gray-700">
+          <span>Music · Culture · Community</span>
+          <span>Varanasi</span>
         </div>
       </div>
     </main>
