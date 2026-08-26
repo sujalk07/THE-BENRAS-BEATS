@@ -170,8 +170,10 @@ export default function EventsPage() {
           /* Events */
           <div className="space-y-4">
             {events.map((event, index) => {
+              const isEventClosed = new Date(event.event_date) < new Date();
+
               const btnDisabled =
-                event.isSoldOut || event.isUserRegistered;
+                event.isSoldOut || event.isUserRegistered || isEventClosed;
 
               const isRegistering =
                 registeringId === event.id;
@@ -179,7 +181,9 @@ export default function EventsPage() {
               return (
                 <article
                   key={event.id}
-                  className="group overflow-hidden rounded-2xl border border-white/[0.08] bg-[#11100E] transition-all duration-300 hover:border-[#B8923F]/30"
+                  className={`group overflow-hidden rounded-2xl border border-white/[0.08] bg-[#11100E] transition-all duration-300 hover:border-[#B8923F]/30 ${
+                    isEventClosed ? "opacity-60" : ""
+                  }`}
                 >
                   <div className="grid md:grid-cols-[230px_1fr]">
 
@@ -204,6 +208,17 @@ export default function EventsPage() {
                       {/* Number */}
                       <span className="absolute left-4 top-4 font-mono text-[9px] tracking-[0.2em] text-white/40">
                         {String(index + 1).padStart(2, "0")}
+                      </span>
+
+                      {/* Open / Closed stamp */}
+                      <span
+                        className={`absolute top-3 right-3 -rotate-6 text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-sm border-2 bg-black/40 backdrop-blur-sm ${
+                          isEventClosed
+                            ? "border-[#C4707F]/60 text-[#C4707F]"
+                            : "border-emerald-400/60 text-emerald-300"
+                        }`}
+                      >
+                        {isEventClosed ? "Closed" : "Open"}
                       </span>
                     </div>
 
@@ -258,7 +273,9 @@ export default function EventsPage() {
                               className="text-[#B8923F]"
                             />
 
-                            {event.isSoldOut
+                            {isEventClosed
+                              ? "Event Closed"
+                              : event.isSoldOut
                               ? "Sold Out"
                               : `${event.slotsLeft} slots left`}
                           </div>
@@ -269,7 +286,11 @@ export default function EventsPage() {
                       <div className="mt-6 flex flex-col gap-3 border-t border-white/[0.06] pt-4 sm:flex-row sm:items-center sm:justify-between">
 
                         <div>
-                          {event.isUserRegistered ? (
+                          {isEventClosed ? (
+                            <span className="text-[9px] uppercase tracking-[0.15em] text-gray-600">
+                              Event Closed
+                            </span>
+                          ) : event.isUserRegistered ? (
                             <span className="inline-flex items-center gap-1.5 text-[9px] uppercase tracking-[0.15em] text-emerald-400">
                               <CheckCircle size={12} />
                               Registered
@@ -289,7 +310,9 @@ export default function EventsPage() {
                           disabled={btnDisabled}
                           onClick={() => handleRegister(event.id)}
                           className={`inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-xs font-semibold transition-all ${
-                            event.isUserRegistered
+                            isEventClosed
+                              ? "cursor-not-allowed border border-white/[0.05] bg-white/[0.02] text-gray-700"
+                              : event.isUserRegistered
                               ? "border border-emerald-400/20 bg-emerald-400/[0.06] text-emerald-400"
                               : event.isSoldOut
                               ? "cursor-not-allowed border border-white/[0.05] bg-white/[0.02] text-gray-700"
@@ -304,6 +327,8 @@ export default function EventsPage() {
                               />
                               Registering
                             </>
+                          ) : isEventClosed ? (
+                            "Event Closed"
                           ) : event.isUserRegistered ? (
                             <>
                               <CheckCircle size={14} />

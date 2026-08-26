@@ -33,6 +33,7 @@ export default function UpcomingEvents() {
         const { data: eventsData, error: eventsErr } = await supabase
           .from("events")
           .select("*")
+          .gte("event_date", new Date().toISOString()) // only future/ongoing events
           .order("event_date", { ascending: true });
 
         const { data: regsData, error: regsErr } = await supabase

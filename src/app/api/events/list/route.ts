@@ -7,12 +7,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
 
-    // 1. Fetch all events
-    // 1. Fetch only upcoming events (hide anything whose date has passed)
+    // 1. Fetch all events (past and upcoming — the UI marks closed ones)
     const { data: events, error: eventsError } = await supabaseAdmin
       .from("events")
       .select("*")
-      .gte("event_date", new Date().toISOString())
       .order("event_date", { ascending: true });
 
     if (eventsError) throw eventsError;
@@ -46,17 +44,17 @@ export async function GET(request: Request) {
       }
 
       // Fetch membership status
-     // Get user's email
-const { data: authUser, error: authError } =
-  await supabaseAdmin.auth.admin.getUserById(userId);
+      // Get user's email
+      const { data: authUser, error: authError } =
+        await supabaseAdmin.auth.admin.getUserById(userId);
 
-if (!authError && authUser.user?.email) {
-  const membership = await getActiveMembership(
-    authUser.user.email.toLowerCase()
-  );
+      if (!authError && authUser.user?.email) {
+        const membership = await getActiveMembership(
+          authUser.user.email.toLowerCase()
+        );
 
-  isMember = !!membership;
-}
+        isMember = !!membership;
+      }
     }
 
     // 4. Format response
@@ -72,8 +70,30 @@ if (!authError && authUser.user?.email) {
       };
     });
 
+    // 5. Sort: upcoming events first (nearest date first),
+    // then closed events after (most recently closed first)
+    const now = new Date().getTime();
+
+    const sortedEvents = formattedEvents.sort((a, b) => {
+      const aTime = new Date(a.event_date).getTime();
+      const bTime = new Date(b.event_date).getTime();
+      const aIsUpcoming = aTime >= now;
+      const bIsUpcoming = bTime >= now;
+
+      if (aIsUpcoming && !bIsUpcoming) return -1;
+      if (!aIsUpcoming && bIsUpcoming) return 1;
+
+      if (aIsUpcoming && bIsUpcoming) {
+        // both upcoming: nearest first
+        return aTime - bTime;
+      }
+
+      // both closed: most recently closed first
+      return bTime - aTime;
+    });
+
     return NextResponse.json({
-      events: formattedEvents,
+      events: sortedEvents,
     });
   } catch (error: any) {
     return NextResponse.json(
