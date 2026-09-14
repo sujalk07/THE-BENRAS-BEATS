@@ -18,6 +18,7 @@ import {
   MessageCircle,
   FileCheck,
   Ticket,
+  Camera,
 } from "lucide-react";
 
 const adminLinks = [
@@ -36,6 +37,7 @@ const adminLinks = [
   { name: "Waitlist", href: "/admin/membership-waitlist", icon: Bell },
   { name: "Feedback", href: "/admin/feedback", icon: MessageCircle },
   { name: "Event Requests", href: "/admin/event-registration-requests", icon: Ticket },
+  { name: "Event Glimpses", href: "/admin/event-glimpses", icon: Camera }
 ];
 
 export default function AdminLayout({
